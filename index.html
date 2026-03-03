@@ -1,62 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>My Games</title>
+    <title>My Games</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1e1e2f, #2b2b45);
+            font-family: Arial, sans-serif;
+        }
 
-<style>
-body {
-    margin: 0;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(135deg, #1e1e2f, #2c2c54);
-    font-family: Arial, sans-serif;
-    color: white;
-}
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 50px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
 
-.container {
-    text-align: center;
-}
+        h1 {
+            color: white;
+            font-size: 40px;
+            margin-bottom: 30px;
+        }
 
-h1 {
-    font-size: 50px;
-    margin-bottom: 40px;
-}
+        a {
+            display: block;
+            margin: 15px 0;
+            padding: 12px 25px;
+            text-decoration: none;
+            font-size: 18px;
+            color: white;
+            background: linear-gradient(45deg, #ff4d6d, #ff758f);
+            border-radius: 30px;
+            transition: all 0.3s ease;
+        }
 
-.game-btn {
-    display: block;
-    width: 250px;
-    margin: 15px auto;
-    padding: 15px;
-    text-decoration: none;
-    color: white;
-    background: #6c5ce7;
-    border-radius: 12px;
-    font-size: 18px;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-}
-
-.game-btn:hover {
-    background: #a29bfe;
-    transform: scale(1.1);
-    box-shadow: 0 12px 25px rgba(0,0,0,0.5);
-}
-</style>
+        a:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px #ff758f;
+        }
+    </style>
 </head>
 
 <body>
+    <div class="container">
+        <h1>🎮 My Games</h1>
 
-<div class="container">
-    <h1>🎮 My Games</h1>
-
-    <a class="game-btn" href="memory game.html">Play Memory Game</a>
-    <a class="game-btn" href="ninjarunner.html">Play Ninja Runner</a>
-    <a class="game-btn" href="sakuraplappy.html">Play Sakura Game</a>
-    <a class="game-btn" href="thuthachngaunhien.html">Play Random Challenge</a>
-</div>
-
+        <a href="memory game.html">Play Memory Game</a>
+        <a href="ninjarunner.html">Play Ninja Runner</a>
+        <a href="sakuralappy.html">Play Sakura Game</a>
+        <a href="thuthachngauhien.html">Play Random Challenge</a>
+    </div>
 </body>
 </html>
