@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Memory Game Nhật Bản</title>
+
+<style>
+  :root{
+    --red:#d72638;
+    --red2:#b71c2b;
+    --bg:#fff7f8;
+    --shadow: 0 10px 25px rgba(0,0,0,.10);
+    --radius: 18px;
+  }
+
+  body{
+    margin:0;
+    font-family: Arial, sans-serif;
+    background: radial-gradient(circle at 10% 10%, #fff, var(--bg));
+    display:flex;
+    justify-content:center;
+    padding: 24px 14px;
+    color:#1d2a39;
+    overflow-x:hidden;
+  }
+
+  .wrap{
+    width: min(1080px, 100%);
+    position: relative;
+    z-index: 2;
+  }
+
+  h1{
+    margin:0 0 14px 0;
+    font-size: 26px;
+  }
+
+  /* sakura petals */
+  .petal{
+    position: fixed;
+    top:-20px;
+    font-size: 18px;
+    opacity: .35;
+    pointer-events:none;
+    animation: fall linear forwards;
+    z-index: 0;
+  }
+  @keyframes fall{
+    0%{
+      transform: translateY(-20px) translateX(0) rotate(0deg);
+    }
+    100%{
+      transform: translateY(110vh) translateX(140px) rotate(260deg);
+    }
+  }
+
+  /* fireworks canvas */
+  #fx{
+    position: fixed;
+    inset: 0;
+    pointer-events:none;
+    z-index: 5;
+  }
+
+  .layout{
+    display:grid;
+    grid-template-columns: 1fr 320px;
+    gap: 16px;
+  }
+
+  @media (max-width: 920px){
+    .layout{
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .topbar{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items:center;
+    justify-content: space-between;
+    background: #fff;
+    padding: 14px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+    border: 1px solid #ffe1e6;
+  }
+
+  .stats{
+    display:flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items:center;
+    font-size: 16px;
+  }
+
+  .pill{
+    background: #fff0f3;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid #ffd3db;
+  }
+
+  select, button, input{
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    cursor:pointer;
+    font-size: 14px;
+  }
+
+  button{
+    background: var(--red);
+    color:#fff;
+    border:none;
+    font-weight: 700;
+  }
+  button:hover{ opacity: .95; }
+
+  .board{
+    display:grid;
+    gap: 14px;
+  }
+
+  /* CARD */
+  .card{
+    height: 120px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    cursor:pointer;
+    user-select:none;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform .25s ease;
+  }
+
+  .card.flipped{
+    transform: rotateY(180deg);
+    cursor: default;
+  }
+
+  .face{
+    position:absolute;
+    inset:0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    border-radius: var(--radius);
+    backface-visibility: hidden;
+    padding: 10px;
+    text-align:center;
+  }
+
+  /* Front: đỏ + pattern */
+  .front{
+    background:
+      radial-gradient(circle at 20% 30%, rgba(255,255,255,.18), transparent 45%),
+      repeating-radial-gradient(circle at 0 0,
+        rgba(255,255,255,.12) 0px,
+        rgba(255,255,255,.12) 8px,
+        rgba(255,255,255,0) 8px,
+        rgba(255,255,255,0) 16px
+      ),
+      linear-gradient(135deg, var(--red), var(--red2));
+    color:#fff;
+    font-size: 34px;
+    font-weight: 900;
+    letter-spacing: 1px;
+  }
+
+  /* Back */
+  .back{
+    transform: rotateY(180deg);
+    background: #fff;
+    border: 2px solid #ffd3db;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+  }
+
+  .icon{
+    font-size: 56px;
+    line-height: 1;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,.10));
+  }
+
+  .matched .back{
+    background: #20c997;
+    color:#fff;
+    border: none;
+  }
+
+  /* RIGHT PANEL */
+  .panel{
+    background:#fff;
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    border: 1px solid #ffe1e6;
+    padding: 14px;
+    height: fit-content;
+  }
+
+  .panel h2{
+    margin: 0 0 10px 0;
+    font-size: 18px;
+  }
+
+  .ranklist{
+    display:flex;
+    flex-direction:column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .rankrow{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: #fff7f8;
+    border: 1px solid #ffd3db;
+  }
+
+  .rankleft{
+    display:flex;
+    gap: 10px;
+    align-items:center;
+    min-width: 0;
+  }
+
+  .badge{
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: var(--red);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight: 900;
+    font-size: 13px;
+    flex: 0 0 auto;
+  }
+
+  .name{
+    font-weight: 800;
+    max-width: 140px;
+    overflow:hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .score{
+    font-weight: 900;
+    font-size: 16px;
+  }
+
+  .muted{
+    opacity:.75;
+    font-size: 12px;
+  }
+
+  /* MODAL */
+  .modal{
+    position: fixed;
+    inset:0;
+    background: rgba(0,0,0,.35);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding: 18px;
+    z-index: 999;
+  }
+  .modal.show{ display:flex; }
+
+  .modal-card{
+    width: min(560px, 100%);
+    background: #fff;
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow: 0 25px 60px rgba(0,0,0,.2);
+    text-align:center;
+    border: 1px solid #ffd3db;
+  }
+
+  .modal-card h2{
+    margin: 6px 0 10px 0;
+  }
+
+  .modal-card p{
+    margin: 0 0 14px 0;
+    opacity:.85;
+  }
+
+  .modal-actions{
+    display:flex;
+    gap: 10px;
+    justify-content:center;
+    flex-wrap: wrap;
+  }
+
+  .namebox{
+    display:flex;
+    gap: 10px;
+    justify-content:center;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  .namebox input{
+    width: 220px;
+  }
+
+  /* Responsive */
+  @media (max-width: 520px){
+    .card{ height: 105px; }
+    .front{ font-size: 30px; }
+    .icon{ font-size: 50px; }
+  }
+</style>
+</head>
+
+<body>
+
+<canvas id="fx"></canvas>
+
+<div class="wrap">
+
+  <h1>🎴 Memory Game Nhật Bản</h1>
+
+  <div class="topbar">
+    <div class="stats">
+      <div class="pill">⏳ Còn: <b id="time">01:00</b></div>
+      <div class="pill">🔁 Lượt lật: <b id="moves">0</b></div>
+      <div class="pill">✅ Ghép đúng: <b id="matched">0</b></div>
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <select id="duration">
+        <option value="30">⚡ 30 giây</option>
+        <option value="60" selected>⏱ 60 giây</option>
+      </select>
+
+      <select id="difficulty">
+        <option value="easy">🎯 Dễ (4x3)</option>
+        <option value="medium" selected>🎯 Trung bình (4x4)</option>
+        <option value="hard">🎯 Khó (6x4)</option>
+      </select>
+
+      <button id="restart">Chơi lại</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="board" id="board"></div>
+    </div>
+
+    <div class="panel">
+      <h2>🏆 Top 10 Hội Chợ</h2>
+      <div class="muted">
+        Ưu tiên: ghép đúng nhiều hơn → nếu bằng nhau thì lượt lật ít hơn.
+      </div>
+
+      <div class="ranklist" id="ranklist"></div>
+
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button id="resetRank">Reset Top 10</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="winModal">
+  <div class="modal-card">
+    <div style="font-size:46px;" id="modalIcon">🏆🎉</div>
+    <h2 id="modalTitle">Kết thúc!</h2>
+    <p id="winText"></p>
+
+    <div class="namebox" id="nameBox">
+      <input id="playerName" maxlength="12" placeholder="Nhập tên (tối đa 12 ký tự)" />
+      <button id="saveScore">Lưu điểm</button>
+    </div>
+
+    <div class="modal-actions" style="margin-top:12px;">
+      <button id="playAgain">Chơi lại</button>
+      <select id="difficulty2">
+        <option value="easy">🎯 Dễ (4x3)</option>
+        <option value="medium" selected>🎯 Trung bình (4x4)</option>
+        <option value="hard">🎯 Khó (6x4)</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================
+   STORAGE
+   ========================= */
+const STORAGE_KEY = "jp_memory_top10_v2";
+
+/* =========================
+   DATA
+   ========================= */
+const vocab = [
+  { key: "takoyaki", icon: "🐙" },
+  { key: "sushi", icon: "🍣" },
+  { key: "ramen", icon: "🍜" },
+  { key: "onigiri", icon: "🍙" },
+  { key: "tempura", icon: "🍤" },
+  { key: "sakura", icon: "🌸" },
+  { key: "matsuri", icon: "🏮" },
+  { key: "kimono", icon: "👘" },
+  { key: "shinkansen", icon: "🚄" },
+  { key: "fuji", icon: "🗻" },
+  { key: "neko", icon: "🐱" },
+  { key: "ocha", icon: "🍵" },
+  { key: "jinja", icon: "⛩️" },
+  { key: "yuki", icon: "❄️" },
+  { key: "tabi", icon: "🧳" },
+  { key: "eki", icon: "🚉" },
+  { key: "asahi", icon: "🌅" },
+  { key: "kasa", icon: "☂️" },
+];
+
+const difficultyConfig = {
+  easy:   { cols: 4, rows: 3, pairs: 6 },
+  medium: { cols: 4, rows: 4, pairs: 8 },
+  hard:   { cols: 6, rows: 4, pairs: 12 },
+};
+
+/* =========================
+   DOM
+   ========================= */
+const board = document.getElementById("board");
+const movesEl = document.getElementById("moves");
+const matchedEl = document.getElementById("matched");
+const timeEl = document.getElementById("time");
+
+const difficultySelect = document.getElementById("difficulty");
+const restartBtn = document.getElementById("restart");
+const durationSelect = document.getElementById("duration");
+
+const winModal = document.getElementById("winModal");
+const winText = document.getElementById("winText");
+const playAgainBtn = document.getElementById("playAgain");
+const difficulty2 = document.getElementById("difficulty2");
+
+const modalTitle = document.getElementById("modalTitle");
+const modalIcon = document.getElementById("modalIcon");
+
+const playerNameInput = document.getElementById("playerName");
+const saveScoreBtn = document.getElementById("saveScore");
+const nameBox = document.getElementById("nameBox");
+
+const ranklist = document.getElementById("ranklist");
+const resetRankBtn = document.getElementById("resetRank");
+
+/* =========================
+   GAME STATE
+   ========================= */
+let firstCard = null;
+let secondCard = null;
+let lockBoard = false;
+
+let moves = 0;
+let matchedPairs = 0;
+let totalPairs = 0;
+
+let timerInterval = null;
+let timeLeft = 60;
+let totalTime = 60;
+
+let gameStarted = false;
+let gameEnded = false;
+
+let lastResult = null;
+
+/* =========================
+   SOUND
+   ========================= */
+let audioCtx = null;
+
+function beep(type="flip"){
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    if(type === "flip"){
+      osc.frequency.value = 520;
+      gain.gain.value = 0.06;
+      osc.type = "sine";
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.06);
+    }
+    else if(type === "match"){
+      osc.frequency.value = 740;
+      gain.gain.value = 0.07;
+      osc.type = "triangle";
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.12);
+    }
+    else if(type === "wrong"){
+      osc.frequency.value = 210;
+      gain.gain.value = 0.07;
+      osc.type = "square";
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.12);
+    }
+    else if(type === "win"){
+      const now = audioCtx.currentTime;
+      osc.type = "sine";
+      gain.gain.value = 0.06;
+
+      osc.frequency.setValueAtTime(660, now);
+      osc.frequency.setValueAtTime(880, now + 0.12);
+      osc.frequency.setValueAtTime(990, now + 0.24);
+
+      osc.start(now);
+      osc.stop(now + 0.38);
+    }
+  }catch(e){}
+}
+
+/* =========================
+   TIMER
+   ========================= */
+function startTimer(){
+  if(timerInterval) return;
+
+  timerInterval = setInterval(() => {
+    if(gameEnded) return;
+
+    timeLeft--;
+    timeEl.textContent = formatCountdown(timeLeft);
+
+    if(timeLeft <= 0){
+      endGameTimeUp();
+    }
+  }, 1000);
+}
+
+function stopTimer(){
+  clearInterval(timerInterval);
+  timerInterval = null;
+}
+
+function resetTimer(){
+  stopTimer();
+  totalTime = parseInt(durationSelect.value, 10);
+  timeLeft = totalTime;
+
+  timeEl.textContent = formatCountdown(timeLeft);
+  gameStarted = false;
+  gameEnded = false;
+}
+
+function formatCountdown(s){
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return String(m).padStart(2,"0") + ":" + String(r).padStart(2,"0");
+}
+
+/* =========================
+   BUILD GAME
+   ========================= */
+function shuffle(arr){
+  return arr.sort(() => Math.random() - 0.5);
+}
+
+function buildDeck(pairs){
+  const picked = shuffle([...vocab]).slice(0, pairs);
+  return shuffle([...picked, ...picked]).map((item, idx) => ({
+    ...item,
+    id: idx + "-" + item.key
+  }));
+}
+
+function renderBoard(level){
+  const cfg = difficultyConfig[level];
+  totalPairs = cfg.pairs;
+
+  board.style.gridTemplateColumns = `repeat(${cfg.cols}, 1fr)`;
+
+  firstCard = null;
+  secondCard = null;
+  lockBoard = false;
+  moves = 0;
+  matchedPairs = 0;
+  movesEl.textContent = moves;
+  matchedEl.textContent = matchedPairs;
+
+  lastResult = null;
+
+  resetTimer();
+  closeWinModal();
+
+  board.innerHTML = "";
+  const deck = buildDeck(cfg.pairs);
+
+  deck.forEach(cardData => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.dataset.key = cardData.key;
+
+    card.innerHTML = `
+      <div class="face front">?</div>
+      <div class="face back">
+        <div class="icon">${cardData.icon}</div>
+      </div>
+    `;
+
+    card.addEventListener("click", () => onFlip(card));
+    board.appendChild(card);
+  });
+}
+
+/* =========================
+   GAME LOGIC
+   ========================= */
+function onFlip(card){
+  if(gameEnded) return;
+  if(lockBoard) return;
+  if(card.classList.contains("flipped")) return;
+  if(card.classList.contains("matched")) return;
+
+  if(!gameStarted){
+    gameStarted = true;
+    startTimer();
+  }
+
+  beep("flip");
+  card.classList.add("flipped");
+
+  if(!firstCard){
+    firstCard = card;
+    return;
+  }
+
+  secondCard = card;
+  moves++;
+  movesEl.textContent = moves;
+
+  checkMatch();
+}
+
+function checkMatch(){
+  const a = firstCard.dataset.key;
+  const b = secondCard.dataset.key;
+
+  if(a === b){
+    beep("match");
+    firstCard.classList.add("matched");
+    secondCard.classList.add("matched");
+    matchedPairs++;
+    matchedEl.textContent = matchedPairs;
+
+    resetTurn();
+
+    if(matchedPairs === totalPairs){
+      endGameWin();
+    }
+  } else {
+    beep("wrong");
+    lockBoard = true;
+
+    setTimeout(() => {
+      firstCard.classList.remove("flipped");
+      secondCard.classList.remove("flipped");
+      resetTurn();
+    }, 650);
+  }
+}
+
+function resetTurn(){
+  [firstCard, secondCard, lockBoard] = [null, null, false];
+}
+
+/* =========================
+   END GAME
+   ========================= */
+function endGameWin(){
+  gameEnded = true;
+  stopTimer();
+  beep("win");
+
+  // pháo hoa chỉ khi thắng
+  fireworksBurst(5);
+
+  lastResult = {
+    mode: difficultySelect.value,
+    pairs: matchedPairs,
+    moves: moves,
+    timeUsed: totalTime - timeLeft,
+    totalTime: totalTime
+  };
+
+  modalIcon.textContent = "🏆🎉";
+  modalTitle.textContent = "Bạn thắng rồi!";
+  winText.textContent = `Bạn ghép đủ ${matchedPairs}/${totalPairs} cặp trong ${moves} lượt lật.`;
+
+  openResultModal();
+}
+
+function endGameTimeUp(){
+  gameEnded = true;
+  stopTimer();
+
+  lastResult = {
+    mode: difficultySelect.value,
+    pairs: matchedPairs,
+    moves: moves,
+    timeUsed: totalTime,
+    totalTime: totalTime
+  };
+
+  modalIcon.textContent = "⏳💥";
+  modalTitle.textContent = "Hết giờ!";
+  winText.textContent = `Bạn ghép được ${matchedPairs}/${totalPairs} cặp trong ${moves} lượt lật.`;
+
+  openResultModal();
+}
+
+function openResultModal(){
+  playerNameInput.value = "";
+  nameBox.style.display = "flex";
+  saveScoreBtn.disabled = false;
+
+  winModal.classList.add("show");
+  setTimeout(() => playerNameInput.focus(), 50);
+}
+
+function closeWinModal(){
+  winModal.classList.remove("show");
+}
+
+/* =========================
+   LEADERBOARD
+   ========================= */
+function loadScores(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return [];
+    const parsed = JSON.parse(raw);
+    if(!Array.isArray(parsed)) return [];
+    return parsed;
+  }catch(e){
+    return [];
+  }
+}
+
+function saveScores(list){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+}
+
+function addScore(name, result){
+  const cleanName = (name || "").trim().slice(0,12) || "NoName";
+
+  const entry = {
+    name: cleanName,
+    pairs: result.pairs,
+    moves: result.moves,
+    mode: result.mode,
+    totalTime: result.totalTime,
+    ts: Date.now()
+  };
+
+  const scores = loadScores();
+  scores.push(entry);
+
+  scores.sort((x,y) => {
+    if(x.pairs !== y.pairs) return y.pairs - x.pairs;
+    if(x.moves !== y.moves) return x.moves - y.moves;
+    return x.ts - y.ts;
+  });
+
+  const top10 = scores.slice(0,10);
+  saveScores(top10);
+  renderLeaderboard();
+}
+
+function medalForRank(i){
+  if(i === 0) return "🥇";
+  if(i === 1) return "🥈";
+  if(i === 2) return "🥉";
+  return String(i+1);
+}
+
+function renderLeaderboard(){
+  const scores = loadScores();
+
+  if(scores.length === 0){
+    ranklist.innerHTML = `
+      <div class="muted" style="margin-top:10px;">
+        Chưa có điểm. Hãy chơi thử để lên bảng xếp hạng 😄
+      </div>
+    `;
+    return;
+  }
+
+  ranklist.innerHTML = scores.map((s, idx) => `
+    <div class="rankrow">
+      <div class="rankleft">
+        <div class="badge">${medalForRank(idx)}</div>
+        <div>
+          <div class="name">${escapeHtml(s.name)}</div>
+          <div class="muted">
+            ${escapeHtml(s.mode.toUpperCase())} • ${s.totalTime}s • Moves: ${s.moves}
+          </div>
+        </div>
+      </div>
+      <div class="score">${s.pairs}</div>
+    </div>
+  `).join("");
+}
+
+function escapeHtml(str){
+  return String(str)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+/* =========================
+   SAKURA PETALS
+   ========================= */
+function spawnPetal(){
+  const p = document.createElement("div");
+  p.className = "petal";
+  p.textContent = "🌸";
+
+  const left = Math.random() * 100;
+  const duration = 6 + Math.random() * 5;
+
+  p.style.left = left + "vw";
+  p.style.animationDuration = duration + "s";
+  p.style.fontSize = (14 + Math.random() * 10) + "px";
+
+  document.body.appendChild(p);
+  setTimeout(() => p.remove(), duration * 1000);
+}
+
+setInterval(() => {
+  if(Math.random() < 0.7) spawnPetal();
+}, 500);
+
+/* =========================
+   FIREWORKS (canvas)
+   ========================= */
+const fx = document.getElementById("fx");
+const fctx = fx.getContext("2d");
+
+function resizeFx(){
+  fx.width = window.innerWidth;
+  fx.height = window.innerHeight;
+}
+window.addEventListener("resize", resizeFx);
+resizeFx();
+
+let particles = [];
+let fxRunning = false;
+
+function fireworksBurst(times=4){
+  // tạo nhiều đợt bắn
+  for(let i=0;i<times;i++){
+    setTimeout(() => spawnBurst(), i*220);
+  }
+  if(!fxRunning){
+    fxRunning = true;
+    requestAnimationFrame(fxLoop);
+  }
+}
+
+function spawnBurst(){
+  const cx = Math.random() * fx.width * 0.7 + fx.width * 0.15;
+  const cy = Math.random() * fx.height * 0.35 + fx.height * 0.10;
+
+  const count = 70;
+  for(let i=0;i<count;i++){
+    const a = Math.random() * Math.PI * 2;
+    const sp = 2 + Math.random() * 4;
+
+    particles.push({
+      x: cx,
+      y: cy,
+      vx: Math.cos(a) * sp,
+      vy: Math.sin(a) * sp,
+      life: 55 + Math.random()*20,
+      size: 2 + Math.random()*2
+    });
+  }
+}
+
+function fxLoop(){
+  fctx.clearRect(0,0,fx.width,fx.height);
+
+  // fade nhẹ
+  fctx.fillStyle = "rgba(255,255,255,0.10)";
+  fctx.fillRect(0,0,fx.width,fx.height);
+
+  particles = particles.filter(p => p.life > 0);
+
+  for(const p of particles){
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.05; // gravity
+    p.vx *= 0.985;
+    p.vy *= 0.985;
+    p.life -= 1;
+
+    // random color
+    const hue = (p.x + p.y) % 360;
+    fctx.fillStyle = `hsla(${hue}, 85%, 60%, 0.9)`;
+    fctx.beginPath();
+    fctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+    fctx.fill();
+  }
+
+  if(particles.length > 0){
+    requestAnimationFrame(fxLoop);
+  }else{
+    fxRunning = false;
+    fctx.clearRect(0,0,fx.width,fx.height);
+  }
+}
+
+/* =========================
+   EVENTS
+   ========================= */
+difficultySelect.addEventListener("change", () => {
+  renderBoard(difficultySelect.value);
+  difficulty2.value = difficultySelect.value;
+});
+
+durationSelect.addEventListener("change", () => {
+  renderBoard(difficultySelect.value);
+});
+
+restartBtn.addEventListener("click", () => {
+  renderBoard(difficultySelect.value);
+});
+
+playAgainBtn.addEventListener("click", () => {
+  difficultySelect.value = difficulty2.value;
+  renderBoard(difficultySelect.value);
+});
+
+difficulty2.addEventListener("change", () => {
+  difficultySelect.value = difficulty2.value;
+});
+
+winModal.addEventListener("click", (e) => {
+  if(e.target === winModal) closeWinModal();
+});
+
+saveScoreBtn.addEventListener("click", () => {
+  if(!lastResult) return;
+
+  const name = playerNameInput.value.trim();
+  if(!name){
+    alert("Bạn hãy nhập tên trước khi lưu nhé!");
+    return;
+  }
+
+  addScore(name, lastResult);
+
+  saveScoreBtn.disabled = true;
+  nameBox.style.display = "none";
+});
+
+playerNameInput.addEventListener("keydown", (e) => {
+  if(e.key === "Enter"){
+    saveScoreBtn.click();
+  }
+});
+
+resetRankBtn.addEventListener("click", () => {
+  const ok = confirm("Bạn có chắc muốn reset bảng Top 10 không?");
+  if(!ok) return;
+  localStorage.removeItem(STORAGE_KEY);
+  renderLeaderboard();
+});
+
+/* =========================
+   INIT
+   ========================= */
+renderLeaderboard();
+renderBoard(difficultySelect.value);
+difficulty2.value = difficultySelect.value;
+</script>
+
+</body>
+</html>

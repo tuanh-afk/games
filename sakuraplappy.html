@@ -1,0 +1,1289 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tech and Talk – Sakura Flappy (PC)</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#0f1730;
+      --panel2:#111c3a;
+      --text:#e9ecff;
+      --muted:#a8b0d8;
+      --accent:#b76bff; /* tím theo logo */
+      --danger:#ff4d6d;
+      --ok:#2ee59d;
+      --japanRed:#e53935;
+      --gold:#ffd54a;
+      --silver:#cfd8dc;
+      --bronze:#d28b5c;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 700px at 20% 10%, #1a1f3f 0%, var(--bg) 55%, #060914 100%);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+
+    .app{
+      width:min(1200px, 100%);
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap:14px;
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      border:1px solid rgba(255,255,255,0.10);
+      border-radius:22px;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+      overflow:hidden;
+    }
+
+    .gameCard{
+      position:relative;
+      padding:14px;
+    }
+
+    .topBar{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:10px;
+    }
+
+    .brand{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+
+    .badge{
+      width:38px;
+      height:38px;
+      border-radius:14px;
+      background: radial-gradient(circle at 30% 30%, #d7b2ff, var(--accent));
+      display:grid;
+      place-items:center;
+      font-weight:800;
+      box-shadow: 0 10px 20px rgba(183,107,255,0.25);
+    }
+
+    .title{
+      line-height:1.05;
+    }
+    .title b{display:block; font-size:15px}
+    .title span{display:block; font-size:12px; color:var(--muted)}
+
+    .controls{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    input[type="text"]{
+      background: rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.12);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      outline:none;
+      width: 190px;
+    }
+    input[type="text"]::placeholder{color:rgba(233,236,255,0.45)}
+
+    button{
+      background: rgba(255,255,255,0.08);
+      border:1px solid rgba(255,255,255,0.12);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      cursor:pointer;
+      transition: transform .08s ease, background .12s ease, border-color .12s ease;
+      user-select:none;
+      font-weight:700;
+    }
+    button:hover{background: rgba(255,255,255,0.12)}
+    button:active{transform: translateY(1px) scale(0.99)}
+
+    .primary{background: linear-gradient(135deg, rgba(183,107,255,0.95), rgba(255,77,109,0.65)); border-color: rgba(255,255,255,0.16)}
+    .primary:hover{background: linear-gradient(135deg, rgba(183,107,255,1), rgba(255,77,109,0.75));}
+
+    .danger{background: rgba(255,77,109,0.18); border-color: rgba(255,77,109,0.35)}
+    .danger:hover{background: rgba(255,77,109,0.25)}
+
+    .ok{background: rgba(46,229,157,0.16); border-color: rgba(46,229,157,0.35)}
+    .ok:hover{background: rgba(46,229,157,0.22)}
+
+    .canvasWrap{
+      position:relative;
+      border-radius:18px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.25);
+    }
+
+    canvas{display:block; width:100%; height:auto; aspect-ratio: 16 / 9;}
+
+    .hud{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+    }
+
+    .hudTop{
+      position:absolute;
+      left:14px;
+      top:12px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      font-weight:800;
+      text-shadow: 0 6px 18px rgba(0,0,0,0.55);
+    }
+
+    .chip{
+      pointer-events:none;
+      background: rgba(0,0,0,0.35);
+      border:1px solid rgba(255,255,255,0.10);
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:13px;
+    }
+
+    .hudCenter{
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      text-align:center;
+      padding:22px;
+    }
+
+    .overlay{
+      background: rgba(0,0,0,0.35);
+      border:1px solid rgba(255,255,255,0.10);
+      border-radius:20px;
+      padding:16px 16px;
+      max-width: 520px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+
+    .overlay h1{
+      margin:0;
+      font-size:22px;
+      letter-spacing:0.2px;
+    }
+
+    .overlay p{margin:8px 0 0; color:var(--muted); font-weight:600}
+
+    .bigScore{
+      font-size:44px;
+      font-weight:900;
+      margin:10px 0 6px;
+    }
+
+    .hint{font-size:12px; color:rgba(233,236,255,0.55); margin-top:10px; font-weight:700}
+
+    /* Leaderboard */
+    .sideCard{padding:14px}
+
+    .sideHeader{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .sideHeader h2{margin:0; font-size:16px}
+    .sideHeader span{display:block; font-size:12px; color:var(--muted); margin-top:2px; font-weight:600}
+
+    .lb{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-top:10px;
+    }
+
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:16px;
+      background: rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.10);
+    }
+
+    .left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+
+    .rank{
+      width:34px;
+      height:34px;
+      border-radius:14px;
+      display:grid;
+      place-items:center;
+      font-weight:900;
+      background: rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.10);
+      flex: 0 0 auto;
+    }
+
+    .rank.gold{background: rgba(255,213,74,0.16); border-color: rgba(255,213,74,0.35)}
+    .rank.silver{background: rgba(207,216,220,0.12); border-color: rgba(207,216,220,0.28)}
+    .rank.bronze{background: rgba(210,139,92,0.14); border-color: rgba(210,139,92,0.28)}
+
+    .name{
+      font-weight:850;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 190px;
+    }
+
+    .score{
+      font-weight:900;
+      font-size:14px;
+    }
+
+    .footerBtns{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .note{
+      margin-top:12px;
+      color:rgba(233,236,255,0.55);
+      font-size:12px;
+      font-weight:600;
+      line-height:1.35;
+    }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .app{grid-template-columns: 1fr;}
+      input[type="text"]{width: 100%}
+      .controls{justify-content:stretch}
+      .controls button{flex:1}
+    }
+
+    /* Fullscreen Top10 screen */
+    .top10Screen{
+      position:fixed;
+      inset:0;
+      background: radial-gradient(1100px 700px at 20% 10%, #1a1f3f 0%, #0b1020 55%, #060914 100%);
+      display:none;
+      z-index:9999;
+      padding:18px;
+    }
+
+    .top10Inner{
+      height:100%;
+      width:min(1100px, 100%);
+      margin:0 auto;
+      display:grid;
+      grid-template-rows: auto 1fr auto;
+      gap:14px;
+    }
+
+    .top10Title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .top10Title h1{margin:0; font-size:28px}
+    .top10Grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      align-content:start;
+    }
+
+    .bigRow{
+      padding:16px 18px;
+      border-radius:22px;
+      background: rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.10);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      min-height:72px;
+    }
+
+    .bigRow .name{max-width:none; font-size:20px}
+    .bigRow .score{font-size:22px}
+
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New";
+      font-size:12px;
+      padding:4px 8px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.28);
+      color: rgba(233,236,255,0.85);
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="app">
+
+    <div class="card gameCard">
+      <div class="topBar">
+        <div class="brand">
+          <div class="badge">TT</div>
+          <div class="title">
+            <b>Tech and Talk – Sakura Flappy</b>
+            <span>PC game • 1 phút/lượt • lưu Top 10 tại máy</span>
+          </div>
+        </div>
+
+        <div class="controls">
+          <input id="playerName" type="text" maxlength="12" placeholder="Nhập tên (≤ 12 ký tự)" />
+          <button id="btnStart" class="primary">▶ Start</button>
+          <button id="btnMode" title="Chế độ 30s cho đông người">⏱ Chế độ 30s</button>
+          <button id="btnFullscreen" title="Fullscreen game">⛶ Fullscreen</button>
+        </div>
+      </div>
+
+      <div class="canvasWrap">
+        <canvas id="game" width="960" height="540"></canvas>
+
+        <div class="hud">
+          <div class="hudTop">
+            <div class="chip">Điểm: <span id="hudScore">0</span></div>
+            <div class="chip">Best: <span id="hudBest">0</span></div>
+            <div class="chip" id="hudTimerWrap" style="display:none">⏱ <span id="hudTimer">30</span>s</div>
+          </div>
+
+          <div class="hudCenter" id="overlayWrap">
+            <div class="overlay" id="overlay">
+              <h1 id="overlayTitle">Nhấn Start để chơi</h1>
+              <p id="overlayDesc">Space / Click để bay. Mục tiêu: sống càng lâu càng tốt.</p>
+              <div class="bigScore" id="overlayScore" style="display:none">0</div>
+              <div class="hint">Mẹo: chơi nhanh gọn cho hội chợ. Có nút Top 10 full-screen bên phải.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="footerBtns" style="margin-top:12px">
+        <button id="btnSave" class="ok" disabled>💾 Lưu kết quả</button>
+        <button id="btnRestart">↻ Chơi lại</button>
+        <button id="btnTop10">🏆 Top 10 (Fullscreen)</button>
+      </div>
+
+    </div>
+
+    <div class="card sideCard">
+      <div class="sideHeader">
+        <div>
+          <h2>🏆 Top 10</h2>
+          <span>Chỉ lưu trên laptop này (không cần mạng)</span>
+        </div>
+        <button id="btnClear" class="danger">Clear</button>
+      </div>
+
+      <div class="lb" id="lb"></div>
+
+      <div class="note">
+        • Mỗi người chơi độc lập, nhập tên trước khi chơi.<br>
+        • Khi thua, bấm <b>Lưu kết quả</b> để vào Top 10.<br>
+        • Chế độ 30s phù hợp khi đông người (tự kết thúc).<br>
+        • Reset thủ công bằng nút Clear.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Fullscreen Top10 -->
+  <div class="top10Screen" id="top10Screen">
+    <div class="top10Inner">
+      <div class="top10Title">
+        <div class="brand">
+          <div class="badge">TT</div>
+          <div>
+            <h1 style="margin:0">🏆 Bảng Xếp Hạng Top 10</h1>
+            <div style="color:var(--muted); font-weight:700; margin-top:4px">Nhấn <span class="kbd">ESC</span> để thoát • hoặc bấm nút Đóng</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end">
+          <button id="btnTop10Fullscreen" class="primary">⛶ Fullscreen</button>
+          <button id="btnCloseTop10">✕ Đóng</button>
+        </div>
+      </div>
+
+      <div class="top10Grid" id="top10Grid"></div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap">
+        <div style="color:rgba(233,236,255,0.6); font-weight:700">Tech and Talk • Hội chợ</div>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
+          <button id="btnClear2" class="danger">Clear Top 10</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // =========================
+  //  Storage + Leaderboard
+  // =========================
+  const STORAGE_KEY = 'techandtalk_sakura_flappy_top10_v2';
+
+  function sanitizeName(raw){
+    const s = (raw ?? '').toString().trim();
+    if(!s) return '';
+    // giới hạn 12 ký tự, bỏ xuống dòng
+    return s.replace(/[\r\n\t]/g,' ').slice(0,12);
+  }
+
+  function loadScores(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return [];
+      const arr = JSON.parse(raw);
+      if(!Array.isArray(arr)) return [];
+      return arr
+        .filter(x => x && typeof x === 'object')
+        .map(x => ({
+          name: sanitizeName(x.name),
+          score: Number(x.score)||0,
+          time: Number(x.time)||Date.now()
+        }))
+        .filter(x => x.name && x.score >= 0)
+        .slice(0, 200);
+    } catch {
+      return [];
+    }
+  }
+
+  function saveScores(arr){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr.slice(0,200)));
+  }
+
+  function getTop10(){
+    const arr = loadScores();
+    // sort: score desc, time asc (ai đạt trước xếp trên)
+    arr.sort((a,b) => (b.score - a.score) || (a.time - b.time));
+    return arr.slice(0,10);
+  }
+
+  function submitScore(name, score){
+    const safeName = sanitizeName(name);
+    if(!safeName) return { ok:false, reason:'no_name' };
+    const s = Math.max(0, Math.floor(score));
+    const arr = loadScores();
+    arr.push({ name: safeName, score: s, time: Date.now() });
+    saveScores(arr);
+    return { ok:true };
+  }
+
+  function resetLeaderboard(){
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
+  // =========================
+  //  DOM
+  // =========================
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+
+  const playerNameEl = document.getElementById('playerName');
+  const btnStart = document.getElementById('btnStart');
+  const btnRestart = document.getElementById('btnRestart');
+  const btnSave = document.getElementById('btnSave');
+  const btnClear = document.getElementById('btnClear');
+  const btnMode = document.getElementById('btnMode');
+  const btnFullscreen = document.getElementById('btnFullscreen');
+  const btnTop10 = document.getElementById('btnTop10');
+
+  const hudScore = document.getElementById('hudScore');
+  const hudBest = document.getElementById('hudBest');
+  const hudTimerWrap = document.getElementById('hudTimerWrap');
+  const hudTimer = document.getElementById('hudTimer');
+
+  const overlayWrap = document.getElementById('overlayWrap');
+  const overlayTitle = document.getElementById('overlayTitle');
+  const overlayDesc = document.getElementById('overlayDesc');
+  const overlayScore = document.getElementById('overlayScore');
+
+  const lbEl = document.getElementById('lb');
+
+  const top10Screen = document.getElementById('top10Screen');
+  const top10Grid = document.getElementById('top10Grid');
+  const btnCloseTop10 = document.getElementById('btnCloseTop10');
+  const btnTop10Fullscreen = document.getElementById('btnTop10Fullscreen');
+  const btnClear2 = document.getElementById('btnClear2');
+
+  // =========================
+  //  Game constants
+  // =========================
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const GRAVITY = 0.55;
+  const FLAP = -9.3;
+  const PIPE_SPEED = 3.2;
+  const PIPE_GAP = 170;
+  const PIPE_WIDTH = 78;
+  const PIPE_SPAWN = 1180; // ms
+
+  // 30s mode
+  let isTimedMode = false;
+  const TIMED_SECONDS = 30;
+
+  // =========================
+  //  Game state
+  // =========================
+  let running = false;
+  let gameOver = false;
+  let score = 0;
+  let best = 0;
+  let canSave = false;
+
+  let bird = { x: 220, y: H/2, vy: 0, r: 18 };
+  let pipes = [];
+  let lastPipeAt = 0;
+
+  let petals = [];
+  let fireworks = [];
+
+  let startTime = 0;
+  let endAt = 0;
+
+  // =========================
+  //  Utilities
+  // =========================
+  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+  function rand(a,b){ return a + Math.random()*(b-a); }
+
+  function now(){ return performance.now(); }
+
+  function requestFS(el){
+    const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if(fn) fn.call(el);
+  }
+
+  function exitFS(){
+    const fn = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+    if(fn) fn.call(document);
+  }
+
+  function isFullscreen(){
+    return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+  }
+
+  // =========================
+  //  Leaderboard render
+  // =========================
+  function rankIcon(i){
+    if(i===0) return '🥇';
+    if(i===1) return '🥈';
+    if(i===2) return '🥉';
+    return String(i+1);
+  }
+
+  function renderLeaderboardSmall(){
+    const top = getTop10();
+    best = top.length ? top[0].score : 0;
+    hudBest.textContent = String(best);
+
+    lbEl.innerHTML = '';
+    if(top.length === 0){
+      const div = document.createElement('div');
+      div.className = 'row';
+      div.innerHTML = `<div class="left"><div class="rank">–</div><div><div class="name">Chưa có điểm</div><div style="color:var(--muted); font-weight:650; font-size:12px">Hãy chơi lượt đầu tiên</div></div></div><div class="score">0</div>`;
+      lbEl.appendChild(div);
+      return;
+    }
+
+    top.forEach((r, i) => {
+      const div = document.createElement('div');
+      div.className = 'row';
+
+      let rankClass = '';
+      if(i===0) rankClass = 'gold';
+      if(i===1) rankClass = 'silver';
+      if(i===2) rankClass = 'bronze';
+
+      div.innerHTML = `
+        <div class="left">
+          <div class="rank ${rankClass}">${rankIcon(i)}</div>
+          <div style="min-width:0">
+            <div class="name">${escapeHtml(r.name)}</div>
+            <div style="color:rgba(233,236,255,0.55); font-weight:750; font-size:12px">${new Date(r.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+          </div>
+        </div>
+        <div class="score">${r.score}</div>
+      `;
+      lbEl.appendChild(div);
+    });
+  }
+
+  function renderLeaderboardBig(){
+    const top = getTop10();
+    top10Grid.innerHTML = '';
+
+    for(let i=0;i<10;i++){
+      const r = top[i];
+      const div = document.createElement('div');
+      div.className = 'bigRow';
+
+      let rankClass = '';
+      if(i===0) rankClass = 'gold';
+      if(i===1) rankClass = 'silver';
+      if(i===2) rankClass = 'bronze';
+
+      const name = r ? escapeHtml(r.name) : '—';
+      const sc = r ? r.score : 0;
+
+      div.innerHTML = `
+        <div class="left">
+          <div class="rank ${rankClass}" style="width:56px;height:56px;border-radius:22px;font-size:22px">${rankIcon(i)}</div>
+          <div style="min-width:0">
+            <div class="name" style="font-size:22px">${name}</div>
+            <div style="color:rgba(233,236,255,0.55); font-weight:750; font-size:13px">${r ? new Date(r.time).toLocaleString() : ''}</div>
+          </div>
+        </div>
+        <div class="score">${sc}</div>
+      `;
+      top10Grid.appendChild(div);
+    }
+  }
+
+  function escapeHtml(s){
+    return (s??'').toString()
+      .replaceAll('&','&amp;')
+      .replaceAll('<','&lt;')
+      .replaceAll('>','&gt;')
+      .replaceAll('"','&quot;')
+      .replaceAll("'",'&#039;');
+  }
+
+  // =========================
+  //  Visual: Sakura bird
+  // =========================
+  function drawSakuraBird(x,y, tilt){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(tilt);
+
+    // glow
+    ctx.beginPath();
+    ctx.arc(0,0, 26, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(183,107,255,0.14)';
+    ctx.fill();
+
+    // petals (5)
+    const petal = (ang, color1, color2) => {
+      ctx.save();
+      ctx.rotate(ang);
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.quadraticCurveTo(20, -10, 34, 0);
+      ctx.quadraticCurveTo(20, 10, 0, 0);
+      const g = ctx.createLinearGradient(0,0,34,0);
+      g.addColorStop(0, color1);
+      g.addColorStop(1, color2);
+      ctx.fillStyle = g;
+      ctx.fill();
+      ctx.restore();
+    };
+
+    const c1 = 'rgba(255,210,230,0.95)';
+    const c2 = 'rgba(255,150,190,0.95)';
+
+    for(let i=0;i<5;i++){
+      petal(i*(Math.PI*2/5), c1, c2);
+    }
+
+    // center
+    ctx.beginPath();
+    ctx.arc(0,0, 8, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,245,180,0.95)';
+    ctx.fill();
+
+    // tiny face dot
+    ctx.beginPath();
+    ctx.arc(10, -2, 2.2, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(30,20,35,0.65)';
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // =========================
+  //  Visual: Background
+  // =========================
+  function spawnPetals(n=2){
+    for(let i=0;i<n;i++){
+      petals.push({
+        x: rand(0,W),
+        y: -20,
+        vx: rand(-0.4, -1.6),
+        vy: rand(0.7, 1.8),
+        r: rand(4, 9),
+        rot: rand(0, Math.PI*2),
+        vr: rand(-0.04, 0.04),
+        a: rand(0.35, 0.75)
+      });
+    }
+  }
+
+  function drawBackground(){
+    // sky gradient
+    const g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0, '#141a38');
+    g.addColorStop(1, '#070a16');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+
+    // moon
+    ctx.beginPath();
+    ctx.arc(W*0.82, H*0.22, 46, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.fill();
+
+    // soft clouds
+    for(let i=0;i<4;i++){
+      const cx = (W*0.15) + i*220;
+      const cy = H*0.18 + Math.sin((i+1)*1.7)*18;
+      ctx.fillStyle = 'rgba(255,255,255,0.03)';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 120, 30, 0, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    // petals
+    for(const p of petals){
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha = p.a;
+      ctx.fillStyle = 'rgba(255,180,210,0.9)';
+      ctx.beginPath();
+      ctx.ellipse(0,0, p.r*1.3, p.r, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+
+    // ground
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillRect(0, H-54, W, 54);
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.fillRect(0, H-54, W, 2);
+  }
+
+  // =========================
+  //  Visual: Japan pipes
+  // =========================
+  function drawPipe(x, topH, gap){
+    const bottomY = topH + gap;
+
+    // main pipe red (torii vibe)
+    const red = 'rgba(229,57,53,0.92)';
+    const red2 = 'rgba(255,120,120,0.25)';
+
+    // top pipe
+    drawPipeSegment(x, 0, PIPE_WIDTH, topH, red, red2, true);
+
+    // bottom pipe
+    drawPipeSegment(x, bottomY, PIPE_WIDTH, H-bottomY-54, red, red2, false);
+
+    // small sakura branch near gap (decor)
+    drawSakuraBranch(x, topH + gap/2);
+  }
+
+  function drawPipeSegment(x, y, w, h, color, shine, isTop){
+    ctx.save();
+
+    // body
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, w, h);
+
+    // shine
+    const g = ctx.createLinearGradient(x,0,x+w,0);
+    g.addColorStop(0, 'rgba(255,255,255,0.05)');
+    g.addColorStop(0.35, shine);
+    g.addColorStop(1, 'rgba(0,0,0,0.12)');
+    ctx.fillStyle = g;
+    ctx.fillRect(x, y, w, h);
+
+    // border
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x+1, y+1, w-2, h-2);
+
+    // cap
+    const capH = 16;
+    const capY = isTop ? (y + h - capH) : y;
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    ctx.fillRect(x-6, capY, w+12, capH);
+    ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+    ctx.strokeRect(x-6+1, capY+1, w+12-2, capH-2);
+
+    // torii black strip
+    ctx.fillStyle = 'rgba(10,10,15,0.35)';
+    ctx.fillRect(x, capY + capH*0.35, w, 4);
+
+    ctx.restore();
+  }
+
+  function drawSakuraBranch(x, y){
+    // subtle, only sometimes
+    if(((x|0) % 2) !== 0) return;
+
+    ctx.save();
+    ctx.globalAlpha = 0.65;
+
+    const bx = x + PIPE_WIDTH/2;
+    const by = y;
+
+    ctx.strokeStyle = 'rgba(110,70,55,0.65)';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+
+    ctx.beginPath();
+    ctx.moveTo(bx-28, by-10);
+    ctx.quadraticCurveTo(bx-8, by-24, bx+20, by-14);
+    ctx.stroke();
+
+    // blossoms
+    for(let i=0;i<4;i++){
+      const px = bx + rand(-18, 18);
+      const py = by + rand(-22, 8);
+      ctx.beginPath();
+      ctx.arc(px, py, rand(4,7), 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,190,215,0.9)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(px+1, py+1, 1.6, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,245,190,0.85)';
+      ctx.fill();
+    }
+
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  // =========================
+  //  Fireworks (when new record)
+  // =========================
+  function spawnFireworks(){
+    const bursts = 7;
+    for(let b=0;b<bursts;b++){
+      const cx = rand(W*0.35, W*0.85);
+      const cy = rand(H*0.18, H*0.55);
+      const particles = 34;
+      for(let i=0;i<particles;i++){
+        const a = (i/particles) * Math.PI*2;
+        const sp = rand(1.4, 4.8);
+        fireworks.push({
+          x: cx,
+          y: cy,
+          vx: Math.cos(a)*sp,
+          vy: Math.sin(a)*sp,
+          life: rand(38, 58),
+          max: 58,
+          r: rand(1.4, 2.6),
+          hue: rand(0, 360)
+        });
+      }
+    }
+  }
+
+  function updateFireworks(){
+    for(const f of fireworks){
+      f.x += f.vx;
+      f.y += f.vy;
+      f.vy += 0.05;
+      f.life -= 1;
+      f.vx *= 0.985;
+      f.vy *= 0.985;
+    }
+    fireworks = fireworks.filter(f => f.life > 0);
+  }
+
+  function drawFireworks(){
+    if(fireworks.length === 0) return;
+    ctx.save();
+    for(const f of fireworks){
+      const t = clamp(f.life / f.max, 0, 1);
+      ctx.globalAlpha = t;
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+      // HSL supported widely
+      ctx.fillStyle = `hsla(${f.hue}, 90%, 70%, 1)`;
+      ctx.fill();
+    }
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  // =========================
+  //  Game logic
+  // =========================
+  function resetGame(){
+    running = false;
+    gameOver = false;
+    score = 0;
+    canSave = false;
+
+    bird = { x: 220, y: H/2, vy: 0, r: 18 };
+    pipes = [];
+    lastPipeAt = 0;
+
+    overlayWrap.style.display = 'grid';
+    overlayTitle.textContent = 'Nhấn Start để chơi';
+    overlayDesc.textContent = 'Space / Click để bay. Tránh cột đỏ kiểu Nhật.';
+    overlayScore.style.display = 'none';
+
+    btnSave.disabled = true;
+
+    startTime = 0;
+    endAt = 0;
+
+    hudTimerWrap.style.display = isTimedMode ? 'inline-flex' : 'none';
+    hudTimer.textContent = String(TIMED_SECONDS);
+
+    // petals
+    petals = [];
+    spawnPetals(22);
+
+    fireworks = [];
+
+    hudScore.textContent = '0';
+  }
+
+  function startGame(){
+    const name = sanitizeName(playerNameEl.value);
+    if(!name){
+      playerNameEl.focus();
+      overlayWrap.style.display = 'grid';
+      overlayTitle.textContent = 'Bạn chưa nhập tên 😅';
+      overlayDesc.textContent = 'Hãy nhập tên (≤ 12 ký tự) để chơi.';
+      overlayScore.style.display = 'none';
+      return;
+    }
+
+    resetGame();
+    running = true;
+    startTime = now();
+    if(isTimedMode){
+      endAt = startTime + TIMED_SECONDS*1000;
+      hudTimerWrap.style.display = 'inline-flex';
+    } else {
+      hudTimerWrap.style.display = 'none';
+    }
+
+    overlayWrap.style.display = 'none';
+  }
+
+  function endGame(reason='crash'){
+    if(gameOver) return;
+    gameOver = true;
+    running = false;
+    canSave = true;
+    btnSave.disabled = false;
+
+    const name = sanitizeName(playerNameEl.value);
+
+    overlayWrap.style.display = 'grid';
+    overlayTitle.textContent = reason === 'time' ? 'Hết giờ!' : 'Game Over';
+    overlayDesc.textContent = `Người chơi: ${name || '—'} • Bấm “Lưu kết quả” để vào Top 10.`;
+    overlayScore.style.display = 'block';
+    overlayScore.textContent = String(score);
+
+    // fireworks if new record (bạn thắng)
+    const top = getTop10();
+    const currentBest = top.length ? top[0].score : 0;
+    if(score > currentBest){
+      spawnFireworks();
+    }
+  }
+
+  function flap(){
+    if(!running) return;
+    bird.vy = FLAP;
+  }
+
+  function spawnPipe(){
+    const margin = 80;
+    const maxTop = H - 54 - PIPE_GAP - margin;
+    const topH = Math.floor(rand(margin, maxTop));
+    pipes.push({ x: W + 30, topH, passed:false });
+  }
+
+  function circleRectCollide(cx, cy, r, rx, ry, rw, rh){
+    const nx = clamp(cx, rx, rx+rw);
+    const ny = clamp(cy, ry, ry+rh);
+    const dx = cx - nx;
+    const dy = cy - ny;
+    return (dx*dx + dy*dy) <= r*r;
+  }
+
+  function update(dt){
+    // petals
+    if(petals.length < 80) spawnPetals(1);
+    for(const p of petals){
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+      if(p.x < -30) p.x = W + 30;
+      if(p.y > H + 30){
+        p.y = -20;
+        p.x = rand(0,W);
+      }
+    }
+
+    updateFireworks();
+
+    if(!running) return;
+
+    // timer mode
+    if(isTimedMode){
+      const t = now();
+      const remain = Math.max(0, Math.ceil((endAt - t)/1000));
+      hudTimer.textContent = String(remain);
+      if(t >= endAt){
+        endGame('time');
+        return;
+      }
+    }
+
+    // bird physics
+    bird.vy += GRAVITY;
+    bird.y += bird.vy;
+
+    // ground / ceiling
+    if(bird.y - bird.r < 0){
+      bird.y = bird.r;
+      bird.vy = 0;
+    }
+    if(bird.y + bird.r > H - 54){
+      bird.y = H - 54 - bird.r;
+      endGame('crash');
+      return;
+    }
+
+    // pipes spawn
+    if(now() - lastPipeAt > PIPE_SPAWN){
+      spawnPipe();
+      lastPipeAt = now();
+    }
+
+    // move pipes
+    for(const p of pipes){
+      p.x -= PIPE_SPEED;
+
+      // score
+      if(!p.passed && p.x + PIPE_WIDTH < bird.x){
+        p.passed = true;
+        score += 1;
+        hudScore.textContent = String(score);
+      }
+
+      // collisions
+      const topRect = { x: p.x, y: 0, w: PIPE_WIDTH, h: p.topH };
+      const botY = p.topH + PIPE_GAP;
+      const botRect = { x: p.x, y: botY, w: PIPE_WIDTH, h: (H-54) - botY };
+
+      if(circleRectCollide(bird.x, bird.y, bird.r, topRect.x, topRect.y, topRect.w, topRect.h)){
+        endGame('crash');
+        return;
+      }
+      if(circleRectCollide(bird.x, bird.y, bird.r, botRect.x, botRect.y, botRect.w, botRect.h)){
+        endGame('crash');
+        return;
+      }
+    }
+
+    pipes = pipes.filter(p => p.x > -PIPE_WIDTH - 50);
+  }
+
+  function draw(){
+    drawBackground();
+
+    // pipes
+    for(const p of pipes){
+      drawPipe(p.x, p.topH, PIPE_GAP);
+    }
+
+    // bird
+    const tilt = clamp(bird.vy / 14, -0.7, 0.9);
+    drawSakuraBird(bird.x, bird.y, tilt);
+
+    // fireworks overlay
+    drawFireworks();
+
+    // score shadow
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.font = '900 44px ui-sans-serif, system-ui';
+    ctx.fillText(String(score), 18, 112);
+    ctx.restore();
+  }
+
+  // =========================
+  //  Loop
+  // =========================
+  let last = now();
+  function loop(){
+    const t = now();
+    const dt = Math.min(33, t-last);
+    last = t;
+
+    update(dt);
+    draw();
+
+    requestAnimationFrame(loop);
+  }
+
+  // =========================
+  //  Events
+  // =========================
+  window.addEventListener('keydown', (e) => {
+    if(e.code === 'Space'){
+      e.preventDefault();
+      if(!running && !gameOver){
+        // allow quick start
+        startGame();
+      } else {
+        flap();
+      }
+    }
+    if(e.code === 'Enter'){
+      if(!running) startGame();
+    }
+    if(e.code === 'Escape'){
+      if(top10Screen.style.display === 'block'){
+        closeTop10();
+      } else if(isFullscreen()){
+        exitFS();
+      }
+    }
+  });
+
+  canvas.addEventListener('mousedown', () => {
+    if(!running && !gameOver){
+      startGame();
+      return;
+    }
+    flap();
+  });
+
+  btnStart.addEventListener('click', startGame);
+  btnRestart.addEventListener('click', () => {
+    resetGame();
+    startGame();
+  });
+
+  btnSave.addEventListener('click', () => {
+    if(!canSave) return;
+    const name = sanitizeName(playerNameEl.value);
+    const res = submitScore(name, score);
+    if(!res.ok){
+      playerNameEl.focus();
+      overlayWrap.style.display = 'grid';
+      overlayTitle.textContent = 'Bạn chưa nhập tên 😅';
+      overlayDesc.textContent = 'Nhập tên rồi bấm Lưu kết quả.';
+      overlayScore.style.display = 'none';
+      return;
+    }
+
+    canSave = false;
+    btnSave.disabled = true;
+
+    renderLeaderboardSmall();
+    renderLeaderboardBig();
+
+    overlayTitle.textContent = 'Đã lưu vào Top 10! 🎉';
+    overlayDesc.textContent = 'Bạn có thể bấm Chơi lại hoặc nhấn Start cho người tiếp theo.';
+  });
+
+  btnClear.addEventListener('click', () => {
+    if(!confirm('Bạn chắc chắn muốn Clear Top 10?')) return;
+    resetLeaderboard();
+    renderLeaderboardSmall();
+    renderLeaderboardBig();
+  });
+  btnClear2.addEventListener('click', () => {
+    if(!confirm('Bạn chắc chắn muốn Clear Top 10?')) return;
+    resetLeaderboard();
+    renderLeaderboardSmall();
+    renderLeaderboardBig();
+  });
+
+  btnMode.addEventListener('click', () => {
+    isTimedMode = !isTimedMode;
+    btnMode.textContent = isTimedMode ? '⏱ 30s: ON' : '⏱ Chế độ 30s';
+    resetGame();
+  });
+
+  btnFullscreen.addEventListener('click', () => {
+    const wrap = document.querySelector('.gameCard');
+    if(isFullscreen()) exitFS();
+    else requestFS(wrap);
+  });
+
+  btnTop10.addEventListener('click', openTop10);
+  btnCloseTop10.addEventListener('click', closeTop10);
+
+  btnTop10Fullscreen.addEventListener('click', () => {
+    if(isFullscreen()) exitFS();
+    else requestFS(top10Screen);
+  });
+
+  function openTop10(){
+    renderLeaderboardBig();
+    top10Screen.style.display = 'block';
+  }
+
+  function closeTop10(){
+    top10Screen.style.display = 'none';
+  }
+
+  // =========================
+  //  Init
+  // =========================
+  function init(){
+    renderLeaderboardSmall();
+    renderLeaderboardBig();
+    resetGame();
+    loop();
+  }
+
+  init();
+
+})();
+</script>
+</body>
+</html>
