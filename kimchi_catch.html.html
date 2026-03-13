@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>🍱 Hứng Đồ Ăn Hàn Quốc</title>
+<style>
+:root {
+  --primary: #D85A30;
+  --primary-dark: #B84520;
+  --bg: #FFF4E8;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body {
+  background: var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  width: 100%; height: 100%;
+  overflow-x: hidden;
+}
+#app {
+  display: flex; flex-direction: column; align-items: center;
+  width: 100%; min-height: 100vh; min-height: 100dvh;
+  user-select: none; touch-action: none;
+}
+
+/* ===== LOBBY ===== */
+#lobby {
+  display: flex; flex-direction: column; align-items: center;
+  width: 100%; padding: env(safe-area-inset-top, 12px) 12px 20px;
+  gap: 12px; overflow-y: auto;
+}
+#lobby-title { font-size: 22px; font-weight: 700; color: #333; text-align: center; padding-top: 8px; }
+#lobby-inner { display: flex; gap: 12px; width: 100%; max-width: 640px; align-items: flex-start; }
+#name-panel {
+  flex: 1; background: #fff; border: 1px solid #eee;
+  border-radius: 16px; padding: 1rem;
+  display: flex; flex-direction: column; gap: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+#name-panel h2 { font-size: 14px; font-weight: 600; color: #333; }
+#name-input {
+  width: 100%; padding: 10px 14px; font-size: 15px;
+  border-radius: 10px; border: 1px solid #ddd;
+  background: #fafafa; color: #333; outline: none;
+}
+#name-input:focus { border-color: var(--primary); }
+#rules-box {
+  background: #FFF8F0; border: 1px solid #F2D4BC;
+  border-radius: 12px; padding: 10px 12px;
+}
+#rules-box h3 { font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+.rule-item { display: flex; align-items: baseline; gap: 6px; font-size: 12px; color: #555; line-height: 1.6; }
+.rule-icon { font-size: 14px; flex-shrink: 0; }
+#btn-start-lobby {
+  width: 100%; padding: 13px; font-size: 15px; font-weight: 700;
+  border-radius: 50px; border: none; background: var(--primary); color: #fff;
+  cursor: pointer; transition: background 0.15s, transform 0.1s;
+  box-shadow: 0 4px 14px rgba(216,90,48,0.35);
+}
+#btn-start-lobby:hover { background: var(--primary-dark); }
+#btn-start-lobby:active { transform: scale(0.97); }
+
+/* Badges in lobby */
+#badges-panel {
+  background: #fff; border: 1px solid #eee; border-radius: 16px;
+  padding: 1rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+#badges-panel h2 { font-size: 14px; font-weight: 700; color: #333; margin-bottom: 8px; }
+#badges-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.badge-item {
+  display: flex; flex-direction: column; align-items: center;
+  width: 56px; padding: 6px 4px; border-radius: 10px;
+  border: 1.5px solid #eee; background: #fafafa; font-size: 10px;
+  color: #bbb; text-align: center; gap: 3px;
+  transition: border-color 0.2s, background 0.2s;
+}
+.badge-item.unlocked { border-color: #F2C94C; background: #FFFBEA; color: #7A6000; }
+.badge-icon { font-size: 22px; line-height: 1; filter: grayscale(1) opacity(0.3); }
+.badge-item.unlocked .badge-icon { filter: none; }
+
+#top10-panel {
+  width: 185px; background: #fff; border: 1px solid #eee;
+  border-radius: 16px; padding: 1rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06); flex-shrink: 0;
+}
+#top10-panel h2 { font-size: 14px; font-weight: 700; color: #333; margin-bottom: 8px; }
+.rank-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; border-bottom: 1px solid #f5f5f5; font-size: 12px; }
+.rank-row:last-child { border-bottom: none; }
+.rank-num { width: 22px; font-weight: 700; text-align: center; font-size: 12px; color: #bbb; }
+.rank-num.gold{color:#BA7517;} .rank-num.silver{color:#999;} .rank-num.bronze{color:#993C1D;}
+.rank-name { flex: 1; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank-score { font-weight: 700; color: var(--primary); }
+.rank-empty { font-size: 12px; color: #bbb; font-style: italic; }
+
+/* ===== GAME FULL SCREEN ===== */
+#game-wrap {
+  display: none; position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100%; height: 100%;
+  flex-direction: column; align-items: center;
+  background: var(--bg);
+  padding: env(safe-area-inset-top,0px) env(safe-area-inset-right,0px)
+            env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);
+  overflow: hidden; z-index: 100;
+}
+#topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  width: 100%; padding: 6px 16px 2px; flex-shrink: 0;
+}
+.stat-label { font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 0.04em; }
+.stat-val { font-size: 22px; font-weight: 700; color: #333; line-height: 1.1; }
+#player-name-display { font-size: 12px; font-weight: 700; color: var(--primary); }
+
+/* Power-up timer bar */
+#powerup-bar-wrap {
+  width: 100%; padding: 0 16px 2px; flex-shrink: 0;
+  display: none; align-items: center; gap: 6px;
+}
+#powerup-label { font-size: 11px; font-weight: 700; white-space: nowrap; }
+#powerup-track { flex:1; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
+#powerup-fill { height: 100%; border-radius: 3px; width: 100%; transition: width 0.1s linear; }
+
+#game-area {
+  flex: 1; width: 100%; position: relative;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 0; padding: 0 6px;
+}
+#canvas {
+  display: block; touch-action: none; cursor: none;
+  border-radius: 14px; border: 1px solid #e8d8c8;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+#emoji-layer {
+  position: absolute; pointer-events: none;
+  border-radius: 14px; overflow: hidden;
+}
+.eitem {
+  position: absolute; transform: translate(-50%,-50%);
+  line-height: 1; pointer-events: none; will-change: top;
+  -webkit-font-smoothing: antialiased; text-rendering: geometricPrecision;
+  transition: filter 0.3s;
+}
+/* ghost curse overlay */
+.ghost-filter { filter: hue-rotate(220deg) brightness(1.3) saturate(0.4); }
+
+#game-btns {
+  position: absolute; top: 8px; right: 14px;
+  display: flex; gap: 6px; z-index: 30;
+}
+.g-btn {
+  width: 36px; height: 36px; border-radius: 10px;
+  border: 1.5px solid rgba(255,255,255,0.85);
+  background: rgba(216,90,48,0.88);
+  color: #fff; font-size: 15px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2); transition: background 0.15s;
+}
+.g-btn:hover { background: var(--primary-dark); }
+
+#bottom {
+  width: 100%; padding: 3px 16px 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 0;
+}
+#lives-row { display: flex; gap: 5px; font-size: 20px; }
+#lvbar-wrap { width: 100%; height: 4px; background: #eee; border-radius: 2px; overflow: hidden; }
+#lvbar { height: 4px; background: linear-gradient(90deg,var(--primary),#F0A070); border-radius: 2px; width: 0%; transition: width 0.3s; }
+#msg { font-size: 12px; color: #999; min-height: 15px; text-align: center; }
+
+/* Badge popup */
+#badge-popup {
+  position: fixed; top: 60px; left: 50%; transform: translateX(-50%) translateY(-80px);
+  background: #fff; border: 2px solid #F2C94C; border-radius: 16px;
+  padding: 10px 20px; text-align: center;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+  z-index: 200; pointer-events: none; opacity: 0;
+  transition: transform 0.4s cubic-bezier(.34,1.56,.64,1), opacity 0.3s;
+}
+#badge-popup.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+#badge-popup .bp-icon { font-size: 32px; }
+#badge-popup .bp-title { font-size: 13px; font-weight: 700; color: #7A6000; }
+#badge-popup .bp-sub { font-size: 11px; color: #aaa; }
+
+/* Confetti canvas overlay */
+#confetti-canvas {
+  position: fixed; top:0; left:0; width:100%; height:100%;
+  pointer-events: none; z-index: 150;
+}
+
+/* Reset BXH button */
+#btn-reset-lb {
+  width: 100%; padding: 7px; font-size: 12px; font-weight: 600;
+  border-radius: 50px; border: 1.5px solid #ffb3a0;
+  background: transparent; color: #D85A30;
+  cursor: pointer; transition: background 0.15s, transform 0.1s;
+  margin-top: 4px;
+}
+#btn-reset-lb:hover { background: #fff0eb; }
+#btn-reset-lb:active { transform: scale(0.97); }
+
+/* Confirm overlay */
+#reset-confirm {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45); z-index: 500;
+  align-items: center; justify-content: center;
+}
+#reset-confirm.show { display: flex; }
+#reset-box {
+  background: #fff; border-radius: 20px; padding: 28px 24px;
+  text-align: center; max-width: 280px; width: 90%;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.22);
+  animation: popIn 0.3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn { from{transform:scale(0.7);opacity:0} to{transform:scale(1);opacity:1} }
+#reset-box .rb-icon { font-size: 42px; margin-bottom: 8px; }
+#reset-box h3 { font-size: 16px; font-weight: 700; color: #333; margin-bottom: 6px; }
+#reset-box p  { font-size: 13px; color: #888; margin-bottom: 18px; line-height: 1.5; }
+#reset-box .rb-btns { display: flex; gap: 10px; }
+#reset-box .rb-btns button {
+  flex: 1; padding: 11px; border-radius: 50px; font-size: 14px;
+  font-weight: 700; cursor: pointer; border: none;
+  transition: transform 0.1s, opacity 0.15s;
+}
+#reset-box .rb-btns button:active { transform: scale(0.96); }
+#btn-confirm-reset { background: #D85A30; color: #fff; }
+#btn-cancel-reset  { background: #f0f0f0; color: #555; }
+
+/* Lobby petal canvas */
+#lobby-petals {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 0;
+}
+#lobby { position: relative; z-index: 1; }
+
+@media(max-width:480px){
+  #lobby-inner { flex-direction: column; }
+  #top10-panel { width: 100%; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- LOBBY -->
+<div id="lobby">
+  <div id="lobby-title">🍱 Hứng Đồ Ăn Hàn Quốc!</div>
+  <div id="lobby-inner">
+    <div id="name-panel">
+      <h2>Nhập tên của bạn</h2>
+      <input id="name-input" type="text" placeholder="Tên bạn..." maxlength="16"/>
+      <div id="rules-box">
+        <h3>📋 Luật chơi</h3>
+        <div class="rule-item"><span class="rule-icon">🍱</span><span>Hứng đồ ăn Hàn <b>+10 điểm</b></span></div>
+        <div class="rule-item"><span class="rule-icon">⭐</span><span>Hứng <b>Power-up</b>: giỏ to + chậm 3 giây</span></div>
+        <div class="rule-item"><span class="rule-icon">👻</span><span>Hứng <b>Ma</b>: mọi thứ thành ma, hứng tiếp <b>−20đ</b> (3s)</span></div>
+        <div class="rule-item"><span class="rule-icon">💣</span><span>Hứng bom <b>mất 1 mạng</b></span></div>
+        <div class="rule-item"><span class="rule-icon">💨</span><span>Vuột mất đồ ăn <b>−20đ + mất 1 mạng</b></span></div>
+        <div class="rule-item"><span class="rule-icon">❤️</span><span>Có <b>3 mạng</b> — hết mạng là game over</span></div>
+        <div class="rule-item"><span class="rule-icon">📱</span><span>Di chuyển ngón tay / chuột để điều khiển giỏ</span></div>
+      </div>
+      <button id="btn-start-lobby">▶ Bắt đầu</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;flex-shrink:0;width:185px">
+      <div id="top10-panel">
+        <h2>🏆 Xếp hạng</h2>
+        <div id="top10-list"><div class="rank-empty">Chưa có ai chơi...</div></div>
+        <button id="btn-reset-lb">🗑️ Xóa bảng xếp hạng</button>
+      </div>
+      <div id="badges-panel">
+        <h2>🏅 Huy hiệu</h2>
+        <div id="badges-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game-wrap">
+  <div id="topbar">
+    <div><div class="stat-label">Điểm</div><div class="stat-val" id="score">0</div></div>
+    <div style="text-align:center">
+      <div id="player-name-display"></div>
+      <div style="font-size:11px;color:#bbb;">🍱 Hứng Đồ Ăn</div>
+    </div>
+    <div style="text-align:right"><div class="stat-label">Cao nhất</div><div class="stat-val" id="best">0</div></div>
+  </div>
+  <div id="powerup-bar-wrap">
+    <span id="powerup-label"></span>
+    <div id="powerup-track"><div id="powerup-fill"></div></div>
+  </div>
+  <div id="game-area">
+    <canvas id="canvas"></canvas>
+    <div id="emoji-layer"></div>
+    <div id="game-btns">
+      <button class="g-btn" id="btn-mute" title="Tắt nhạc">🔊</button>
+      <button class="g-btn" id="btn-fs" title="Phóng to">⛶</button>
+    </div>
+  </div>
+  <div id="bottom">
+    <div id="lives-row"><span id="l1">❤️</span><span id="l2">❤️</span><span id="l3">❤️</span></div>
+    <div id="lvbar-wrap"><div id="lvbar"></div></div>
+    <div id="msg"></div>
+  </div>
+</div>
+
+<!-- Badge popup -->
+<div id="badge-popup">
+  <div class="bp-icon" id="bp-icon">🏅</div>
+  <div class="bp-title" id="bp-title">Huy hiệu mới!</div>
+  <div class="bp-sub" id="bp-sub"></div>
+</div>
+
+<!-- Confetti canvas -->
+<canvas id="confetti-canvas"></canvas>
+
+<!-- Lobby falling petals -->
+<canvas id="lobby-petals"></canvas>
+
+<!-- Reset confirm overlay -->
+<div id="reset-confirm">
+  <div id="reset-box">
+    <div class="rb-icon">🗑️</div>
+    <h3>Xóa bảng xếp hạng?</h3>
+    <p>Tất cả điểm số sẽ bị xóa vĩnh viễn.<br/>Bạn có chắc không?</p>
+    <div class="rb-btns">
+      <button id="btn-cancel-reset">Hủy</button>
+      <button id="btn-confirm-reset">Xóa hết!</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ============================================================
+//  BADGES
+// ============================================================
+const BADGE_DEFS = [
+  { id:'first',   icon:'🎉', name:'Người mới',      desc:'Chơi lần đầu',           check: s => s >= 0 },
+  { id:'b50',     icon:'🍜', name:'Đói bụng',        desc:'Đạt 50 điểm',            check: s => s >= 50 },
+  { id:'b100',    icon:'🍱', name:'Foodie',           desc:'Đạt 100 điểm',           check: s => s >= 100 },
+  { id:'b200',    icon:'🥇', name:'Vô địch!',         desc:'Đạt 200 điểm',           check: s => s >= 200 },
+  { id:'b300',    icon:'👑', name:'Huyền thoại',      desc:'Đạt 300 điểm',           check: s => s >= 300 },
+  { id:'kimbap',  icon:'🍙', name:'Kimbap lover',     desc:'Hứng được 5 kimbap 🍙',  check: (s,st) => (st.kimbap||0) >= 5 },
+  { id:'ttbk',    icon:'🌶️', name:'Tteokbokki fan',   desc:'Hứng được 5 tteokbokki', check: (s,st) => (st.tteok||0) >= 5 },
+  { id:'powerup', icon:'⭐', name:'Super Catch',      desc:'Dùng 3 power-up',        check: (s,st) => (st.powerups||0) >= 3 },
+  { id:'ghost',   icon:'👻', name:'Ghostbuster',      desc:'Sống sót qua 3 lần ma',  check: (s,st) => (st.ghosts||0) >= 3 },
+];
+
+let unlockedBadges = JSON.parse(localStorage.getItem('badges_v2')||'[]');
+let sessionStats = { kimbap:0, tteok:0, powerups:0, ghosts:0 };
+
+function saveBadges(){ try{ localStorage.setItem('badges_v2', JSON.stringify(unlockedBadges)); }catch(e){} }
+
+function checkBadges(score){
+  let newOnes = [];
+  BADGE_DEFS.forEach(b=>{
+    if(!unlockedBadges.includes(b.id) && b.check(score, sessionStats)){
+      unlockedBadges.push(b.id);
+      newOnes.push(b);
+    }
+  });
+  saveBadges();
+  if(newOnes.length) showBadgePopup(newOnes[0]);
+  renderBadgesGrid();
+}
+
+function showBadgePopup(b){
+  const el = document.getElementById('badge-popup');
+  document.getElementById('bp-icon').textContent = b.icon;
+  document.getElementById('bp-title').textContent = b.name;
+  document.getElementById('bp-sub').textContent = b.desc;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2800);
+}
+
+function renderBadgesGrid(){
+  const grid = document.getElementById('badges-grid');
+  grid.innerHTML = BADGE_DEFS.map(b=>{
+    const ul = unlockedBadges.includes(b.id);
+    return `<div class="badge-item ${ul?'unlocked':''}" title="${b.name}: ${b.desc}">
+      <span class="badge-icon">${b.icon}</span>
+      <span>${b.name}</span>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+//  CONFETTI ENGINE
+// ============================================================
+const confCv = document.getElementById('confetti-canvas');
+const confCtx = confCv.getContext('2d');
+let confetti = [];
+let confRaf = null;
+
+function resizeConfetti(){ confCv.width=window.innerWidth; confCv.height=window.innerHeight; }
+window.addEventListener('resize', resizeConfetti); resizeConfetti();
+
+function burstConfetti(x, y, n=28){
+  const colors=['#D85A30','#F2C94C','#56BFCF','#7AC74F','#E56AB3','#fff'];
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2;
+    const sp=3+Math.random()*5;
+    confetti.push({
+      x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp - 3,
+      rot:Math.random()*360, rv:(Math.random()-0.5)*12,
+      w:6+Math.random()*8, h:3+Math.random()*4,
+      color:colors[Math.floor(Math.random()*colors.length)],
+      life:1, dec:0.018+Math.random()*0.012
+    });
+  }
+  if(!confRaf) animConf();
+}
+
+function animConf(){
+  confCtx.clearRect(0,0,confCv.width,confCv.height);
+  confetti = confetti.filter(c=>c.life>0);
+  confetti.forEach(c=>{
+    c.x+=c.vx; c.y+=c.vy; c.vy+=0.2; c.rot+=c.rv; c.life-=c.dec;
+    confCtx.save(); confCtx.globalAlpha=c.life;
+    confCtx.translate(c.x,c.y); confCtx.rotate(c.rot*Math.PI/180);
+    confCtx.fillStyle=c.color;
+    confCtx.fillRect(-c.w/2,-c.h/2,c.w,c.h);
+    confCtx.restore();
+  });
+  if(confetti.length) confRaf=requestAnimationFrame(animConf);
+  else confRaf=null;
+}
+
+// ============================================================
+//  AUDIO ENGINE
+// ============================================================
+let audioCtx=null, muted=false, bgMelodyTimer=null, bgMelodyIdx=0;
+
+function getAudioCtx(){
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  return audioCtx;
+}
+function playBeep(freq,type,dur,vol,delay=0){
+  if(muted) return;
+  try{
+    const ac=getAudioCtx(), o=ac.createOscillator(), g=ac.createGain();
+    o.connect(g); g.connect(ac.destination);
+    o.type=type||'square'; o.frequency.setValueAtTime(freq,ac.currentTime+delay);
+    g.gain.setValueAtTime(vol||0.15,ac.currentTime+delay);
+    g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+delay+dur);
+    o.start(ac.currentTime+delay); o.stop(ac.currentTime+delay+dur+0.05);
+  }catch(e){}
+}
+function playCatch(){
+  playBeep(880,'sine',0.07,0.16);
+  playBeep(1100,'sine',0.07,0.12,0.05);
+  playBeep(1320,'sine',0.07,0.10,0.10);
+}
+function playPowerUp(){
+  [523,659,784,1047].forEach((f,i)=>playBeep(f,'sine',0.12,0.18,i*0.07));
+}
+function playGhostCurse(){
+  playBeep(200,'sawtooth',0.3,0.2);
+  playBeep(140,'square',0.25,0.15,0.15);
+}
+function playMiss(){ playBeep(180,'sawtooth',0.15,0.2); playBeep(120,'sawtooth',0.1,0.15,0.08); }
+function playBomb(){ playBeep(80,'sawtooth',0.25,0.25); playBeep(60,'square',0.2,0.2,0.1); }
+function playCountBeep(isGo){ playBeep(isGo?880:440,'sine',isGo?0.3:0.12,0.2); }
+function playGameOver(){ [440,370,330,220].forEach((f,i)=>playBeep(f,'sawtooth',0.18,0.18,i*0.15)); }
+
+// K-pop style melody — two alternating phrases
+const BG_MELODY_A = [659,784,880,784,659,523,587,659, 784,880,988,880,784,659,523,587];
+const BG_MELODY_B = [523,587,659,784,659,587,523,440, 587,659,784,659,587,523,440,392];
+let bgPhrase=0;
+function getBgNotes(){ return bgPhrase%2===0?BG_MELODY_A:BG_MELODY_B; }
+
+function startBgMusic(){
+  stopBgMusic(); if(muted) return;
+  let idx=0;
+  function playNext(){
+    const notes=getBgNotes();
+    const freq=notes[idx%notes.length]; idx++;
+    if(idx%notes.length===0) bgPhrase++;
+    try{
+      const ac=getAudioCtx(),o=ac.createOscillator(),g=ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.type='square'; o.frequency.value=freq;
+      g.gain.setValueAtTime(0.055,ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.18);
+      o.start(ac.currentTime); o.stop(ac.currentTime+0.2);
+    }catch(e){}
+    bgMelodyTimer=setTimeout(playNext,190);
+  }
+  playNext();
+}
+function stopBgMusic(){ if(bgMelodyTimer){clearTimeout(bgMelodyTimer);bgMelodyTimer=null;} }
+function toggleMute(){
+  muted=!muted;
+  document.getElementById('btn-mute').textContent=muted?'🔇':'🔊';
+  if(muted) stopBgMusic(); else if(running) startBgMusic();
+}
+
+// ============================================================
+//  GAME ENGINE
+// ============================================================
+const canvas=document.getElementById('canvas');
+const ctx=canvas.getContext('2d');
+const emojiLayer=document.getElementById('emoji-layer');
+let W=400,H=600,DPR=1,BW=80,BH=22;
+let basketX=200;
+let score=0,best=0,lives=3,running=false;
+let items=[],particles=[],floats=[];
+let spawnTimer=0,raf=null;
+let playerName='',leaderboard=[];
+let bgTime=0,petals=[];
+
+// Power-up / curse state
+const PU_DURATION_POWERUP = 8000;  // 8 giây
+const PU_DURATION_GHOST   = 10000; // 10 giây
+let activePowerup = null; // { type:'powerup'|'ghost', endTime, startTime, duration }
+
+// ghost curse: items look like ghosts, catching one costs -20
+const NUM_LANES=5;
+const getLaneX=l=>W*0.1+(l/(NUM_LANES-1))*(W*0.8);
+
+// Emoji lists — added kimbap, tteokbokki (🌶️ represents it), gimbap (🥗 style)
+const GOOD = ['🍱','🥟','🍙','🍜','🫕','🍡','🥘','🍘','🍵','🌸','🥗','🍲','🫔','🥮','🍮','🍯','🥙'];
+// Kimbap = 🍙 (rice ball), Tteokbokki = 🌶️ with custom label trick or use 🍢
+// We use special typed items for kimbap/tteokbokki
+const KIMBAP = '🍙';
+const TTEOKBOKKI = '🍢'; // skewered rice cakes — closest emoji
+
+const SPECIAL_FOOD = [KIMBAP, TTEOKBOKKI]; // tracked for badges
+const BAD   = ['💣'];
+const GHOST_ITEM = '👻';
+const POWERUP_ITEM = '⭐';
+
+// DOM pool
+const domPool=[];
+function getDomEl(){ return domPool.length?domPool.pop():Object.assign(document.createElement('div'),{className:'eitem'}); }
+function releaseDomEl(el){ el.style.display='none'; if(el.parentNode)el.parentNode.removeChild(el); domPool.push(el); }
+
+// ---- Powerup HUD ----
+function showPowerupBar(type){
+  const wrap=document.getElementById('powerup-bar-wrap');
+  const label=document.getElementById('powerup-label');
+  const fill=document.getElementById('powerup-fill');
+  wrap.style.display='flex';
+  if(type==='powerup'){
+    label.textContent='⭐ Siêu giỏ!';
+    label.style.color='#D4A017';
+    fill.style.background='linear-gradient(90deg,#F2C94C,#FFE082)';
+  } else {
+    label.textContent='👻 Lời nguyền ma!';
+    label.style.color='#7B5EA7';
+    fill.style.background='linear-gradient(90deg,#9B59B6,#C39BD3)';
+  }
+}
+function hidePowerupBar(){
+  document.getElementById('powerup-bar-wrap').style.display='none';
+}
+function updatePowerupBar(pct){
+  document.getElementById('powerup-fill').style.width=(pct*100)+'%';
+}
+
+function applyPowerup(type){
+  const dur = type==='ghost' ? PU_DURATION_GHOST : PU_DURATION_POWERUP;
+  activePowerup={ type, startTime:performance.now(), endTime:performance.now()+dur, duration:dur };
+  showPowerupBar(type);
+  if(type==='ghost'){
+    // curse: apply ghost filter to all existing items
+    applyGhostFilter(true);
+    sessionStats.ghosts=(sessionStats.ghosts||0)+1;
+    playGhostCurse();
+    addFloat(W/2,H*0.4,'👻 Lời nguyền 3 giây!','#7B5EA7');
+    document.getElementById('msg').textContent='👻 Mọi thứ thành ma! Cẩn thận!';
+  } else {
+    sessionStats.powerups=(sessionStats.powerups||0)+1;
+    playPowerUp();
+    addFloat(W/2,H*0.4,'⭐ Siêu giỏ! 3 giây!','#D4A017');
+    document.getElementById('msg').textContent='⭐ Giỏ siêu to! Chậm lại!';
+  }
+  checkBadges(score);
+}
+
+function clearPowerup(){
+  if(!activePowerup) return;
+  activePowerup=null;
+  hidePowerupBar();
+  applyGhostFilter(false);
+  document.getElementById('msg').textContent='';
+}
+
+function applyGhostFilter(on){
+  document.querySelectorAll('.eitem').forEach(el=>{
+    if(on) el.classList.add('ghost-filter');
+    else el.classList.remove('ghost-filter');
+  });
+}
+
+// ---- resize ----
+function resize(){
+  const gameArea=document.getElementById('game-area');
+  const topbar=document.getElementById('topbar');
+  const bottom=document.getElementById('bottom');
+  const pubar=document.getElementById('powerup-bar-wrap');
+  const wrap=document.getElementById('game-wrap');
+  const wrapH=wrap.clientHeight||window.innerHeight;
+  const wrapW=wrap.clientWidth||window.innerWidth;
+  const topH=topbar.offsetHeight;
+  const botH=bottom.offsetHeight;
+  const puH=pubar.offsetHeight||0;
+  const padH=10;
+  const availH=wrapH-topH-botH-puH-padH;
+  const availW=wrapW-12;
+  W=availW; H=Math.max(200,availH);
+  DPR=window.devicePixelRatio||1;
+  canvas.width=Math.round(W*DPR); canvas.height=Math.round(H*DPR);
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  emojiLayer.style.width=W+'px'; emojiLayer.style.height=H+'px';
+  emojiLayer.style.left=Math.round((gameArea.clientWidth-W)/2)+'px';
+  emojiLayer.style.top=Math.round((gameArea.clientHeight-H)/2)+'px';
+  ctx.scale(DPR,DPR);
+  BW=W*0.2; BH=H*0.04;
+  basketX=Math.max(BW/2,Math.min(W-BW/2,basketX));
+}
+
+function renderLeaderboard(){
+  const list=document.getElementById('top10-list');
+  if(!leaderboard.length){list.innerHTML='<div class="rank-empty">Chưa có ai chơi...</div>';return;}
+  list.innerHTML=leaderboard.slice(0,10).map((e,i)=>{
+    const cls=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const m=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+    return `<div class="rank-row"><span class="rank-num ${cls}">${m}</span><span class="rank-name">${e.name}</span><span class="rank-score">${e.score}</span></div>`;
+  }).join('');
+}
+
+/* ---- BACKGROUND ---- */
+function drawPalace(){
+  const px=W*0.03,py=H*0.5,pw=W*0.28,ph=H*0.34;
+  ctx.fillStyle='rgba(145,82,42,0.17)'; ctx.fillRect(px,py+ph*0.28,pw,ph*0.72);
+  function roof(cx,cy,rw,rh,a){
+    ctx.fillStyle=`rgba(62,32,95,${a})`;
+    ctx.beginPath(); ctx.moveTo(cx-rw/2,cy);
+    ctx.quadraticCurveTo(cx-rw*0.6,cy-rh*0.3,cx-rw*0.5,cy-rh*0.52);
+    ctx.lineTo(cx,cy-rh); ctx.lineTo(cx+rw*0.5,cy-rh*0.52);
+    ctx.quadraticCurveTo(cx+rw*0.6,cy-rh*0.3,cx+rw/2,cy);
+    ctx.closePath(); ctx.fill();
+  }
+  roof(px+pw/2,py+ph*0.3,pw*1.1,ph*0.32,0.2);
+  roof(px+pw/2,py+ph*0.1,pw*0.86,ph*0.28,0.18);
+  ctx.fillStyle='rgba(115,60,28,0.22)';
+  for(let i=0;i<4;i++) ctx.fillRect(px+pw*0.1+i*pw*0.25,py+ph*0.3,pw*0.07,ph*0.6);
+}
+function drawTree(tx,ty,sz,t){
+  ctx.strokeStyle='rgba(80,42,18,0.24)'; ctx.lineWidth=sz*0.05; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(tx,ty); ctx.quadraticCurveTo(tx-sz*0.07,ty-sz*0.5,tx-sz*0.03,ty-sz*0.84); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(tx-sz*0.03,ty-sz*0.5); ctx.quadraticCurveTo(tx-sz*0.34,ty-sz*0.65,tx-sz*0.38,ty-sz*0.88); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(tx-sz*0.03,ty-sz*0.42); ctx.quadraticCurveTo(tx+sz*0.2,ty-sz*0.6,tx+sz*0.28,ty-sz*0.82); ctx.stroke();
+  [{x:tx-sz*0.03,y:ty-sz*0.88},{x:tx-sz*0.37,y:ty-sz*0.9},{x:tx+sz*0.27,y:ty-sz*0.86},{x:tx-sz*0.17,y:ty-sz*0.72},{x:tx+sz*0.1,y:ty-sz*0.68}].forEach((c,i)=>{
+    const sw=Math.sin(t*0.7+i)*sz*0.01,r=sz*(0.13+i%3*0.036);
+    ctx.fillStyle='rgba(230,135,162,0.3)'; ctx.beginPath(); ctx.arc(c.x+sw,c.y,r,0,Math.PI*2); ctx.fill();
+  });
+  if(Math.random()<0.04) petals.push({x:tx+(Math.random()-0.5)*sz*0.7,y:ty-sz*0.65,vx:(Math.random()-0.5)*0.45,vy:0.3+Math.random()*0.4,rot:Math.random()*Math.PI*2,rv:(Math.random()-0.5)*0.05,life:1,s:sz*0.033});
+}
+
+// Ghost background overlay when cursed
+let ghostBgFlicker=0;
+function drawBg(){
+  bgTime+=0.016;
+  const isCursed=activePowerup&&activePowerup.type==='ghost';
+  ghostBgFlicker+=0.08;
+  const g=ctx.createLinearGradient(0,0,0,H);
+  if(isCursed){
+    const pulse=0.5+0.5*Math.sin(ghostBgFlicker);
+    g.addColorStop(0,`rgba(${80+pulse*30},${60+pulse*20},${120+pulse*40},1)`);
+    g.addColorStop(0.5,'#2A1840');
+    g.addColorStop(1,'#1A1030');
+  } else {
+    g.addColorStop(0,'#FFE0C8'); g.addColorStop(0.5,'#FFF0E0'); g.addColorStop(1,'#FFD4A0');
+  }
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+  if(!isCursed){
+    const sx=W*0.82,sy=H*0.1,sr=W*0.082;
+    const sg=ctx.createRadialGradient(sx,sy,0,sx,sy,sr*2.2);
+    sg.addColorStop(0,'rgba(255,192,88,0.52)'); sg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=sg; ctx.beginPath(); ctx.arc(sx,sy,sr*2.2,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,200,95,0.58)'; ctx.beginPath(); ctx.arc(sx,sy,sr,0,Math.PI*2); ctx.fill();
+    function cloud(cx,cy,r,a){
+      ctx.fillStyle=`rgba(255,255,255,${a})`;
+      [[0,0,1],[-.56,.1,.66],[.6,.05,.7],[-.17,-.27,.6],[.27,-.25,.56]].forEach(([dx,dy,s])=>{ctx.beginPath();ctx.arc(cx+dx*r,cy+dy*r,r*s,0,Math.PI*2);ctx.fill();});
+    }
+    cloud(W*0.13+Math.sin(bgTime*0.12)*W*0.007,H*0.1,W*0.06,0.5);
+    cloud(W*0.47+Math.sin(bgTime*0.09)*W*0.009,H*0.08,W*0.044,0.38);
+    ctx.fillStyle='rgba(125,178,85,0.2)';
+    ctx.beginPath(); ctx.moveTo(0,H*0.84); ctx.quadraticCurveTo(W*0.5,H*0.78,W,H*0.81); ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); ctx.fill();
+    drawPalace();
+    drawTree(W*0.78,H*0.86,W*0.12,bgTime);
+    drawTree(W*0.88,H*0.89,W*0.088,bgTime+1);
+    drawTree(W*0.68,H*0.88,W*0.078,bgTime+2);
+    function lant(lx,ly,ls){
+      ctx.fillStyle='rgba(200,80,42,0.25)'; ctx.beginPath(); ctx.ellipse(lx,ly,ls,ls*1.4,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='rgba(255,190,85,0.14)'; ctx.beginPath(); ctx.ellipse(lx,ly,ls*0.5,ls*0.8,0,0,Math.PI*2); ctx.fill();
+    }
+    lant(W*0.42,H*0.07,W*0.018); lant(W*0.54,H*0.09,W*0.015); lant(W*0.34,H*0.1,W*0.013);
+  } else {
+    // Spooky floating ghosts in background
+    for(let i=0;i<5;i++){
+      const gx=W*(0.1+i*0.2)+Math.sin(bgTime*0.5+i)*W*0.04;
+      const gy=H*(0.15+i%3*0.2)+Math.cos(bgTime*0.4+i)*H*0.03;
+      ctx.font=`${Math.round(W*0.07)}px serif`;
+      ctx.globalAlpha=0.18;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('👻',gx,gy);
+    }
+    ctx.globalAlpha=1;
+  }
+
+  for(let l=0;l<NUM_LANES;l++){
+    ctx.strokeStyle=isCursed?'rgba(180,120,255,0.15)':'rgba(200,150,100,0.09)';
+    ctx.lineWidth=1; ctx.setLineDash([4,8]);
+    ctx.beginPath(); ctx.moveTo(getLaneX(l),0); ctx.lineTo(getLaneX(l),H); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  if(!isCursed){
+    petals=petals.filter(p=>p.life>0&&p.y<H);
+    petals.forEach(p=>{
+      p.x+=p.vx+Math.sin(bgTime+p.rot)*0.2; p.y+=p.vy; p.rot+=p.rv; p.life-=0.004;
+      ctx.save(); ctx.globalAlpha=p.life*0.55; ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+      ctx.fillStyle='#EFA8BA'; ctx.beginPath(); ctx.ellipse(0,0,p.s,p.s*0.5,0,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    });
+  }
+  ctx.globalAlpha=1;
+}
+
+function drawBasket(){
+  const isCursed=activePowerup&&activePowerup.type==='ghost';
+  const isPowerup=activePowerup&&activePowerup.type==='powerup';
+  // effective basket width
+  const curBW = isPowerup ? BW*1.55 : BW;
+  const bx=basketX-curBW/2, by=H-BH-H*0.03;
+
+  ctx.fillStyle='rgba(0,0,0,0.1)';
+  ctx.beginPath(); ctx.ellipse(basketX,by+BH+3,curBW*0.44,3.5,0,0,Math.PI*2); ctx.fill();
+
+  ctx.fillStyle=isCursed?'#7B5EA7':isPowerup?'#F2C94C':'#D85A30';
+  ctx.beginPath();
+  ctx.moveTo(bx+curBW*0.05,by); ctx.lineTo(bx+curBW*0.95,by);
+  ctx.quadraticCurveTo(bx+curBW,by,bx+curBW,by+BH*0.3);
+  ctx.lineTo(bx+curBW*0.9,by+BH); ctx.lineTo(bx+curBW*0.1,by+BH);
+  ctx.lineTo(bx,by+BH*0.3); ctx.quadraticCurveTo(bx,by,bx+curBW*0.05,by);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle=isCursed?'#5B3E8A':isPowerup?'#BA9A10':'#B84520';
+  ctx.fillRect(bx+curBW*0.1,by,curBW*0.8,BH*0.18);
+  ctx.fillStyle=isCursed?'#B39DDB':isPowerup?'#FFE082':'#FF8055';
+  ctx.fillRect(bx+curBW*0.1,by,curBW*0.8,BH*0.06);
+  ctx.strokeStyle='rgba(255,255,255,0.2)'; ctx.lineWidth=1;
+  const gx=bx+curBW*0.15,gy=by+BH*0.25,gw=curBW*0.7;
+  for(let i=0;i<=3;i++){ctx.beginPath();ctx.moveTo(gx+gw/3*i,gy);ctx.lineTo(gx+gw/3*i,by+BH*0.9);ctx.stroke();}
+  for(let i=0;i<=2;i++){ctx.beginPath();ctx.moveTo(gx,gy+BH*0.65/2*i);ctx.lineTo(gx+gw,gy+BH*0.65/2*i);ctx.stroke();}
+
+  // return effective width for collision
+  return curBW;
+}
+
+function addParticles(x,y,color,count=12){
+  for(let i=0;i<count;i++){
+    const a=Math.random()*Math.PI*2,sp=1.5+Math.random()*3;
+    particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-2.5,life:1,color,r:W*0.012});
+  }
+}
+function addFloat(x,y,txt,color){ floats.push({x,y,txt,color,life:1,vy:-1.5}); }
+function updateLives(){ ['l1','l2','l3'].forEach((id,i)=>document.getElementById(id).textContent=i<lives?'❤️':'🖤'); }
+function setScore(v){
+  score=Math.max(0,v);
+  document.getElementById('score').textContent=score;
+  document.getElementById('lvbar').style.width=((score%100)/100*100)+'%';
+}
+
+function clearAllDomItems(){ items.forEach(it=>{if(it.el){releaseDomEl(it.el);it.el=null;}}); items=[]; }
+
+function spawnItem(){
+  const lv=Math.floor(score/100);
+  // decide item type
+  let emoji, type;
+  const roll=Math.random();
+  if(roll<0.07){ emoji=POWERUP_ITEM; type='powerup'; }
+  else if(roll<0.14){ emoji=GHOST_ITEM; type='ghost'; }
+  else if(roll<0.21){ emoji='💣'; type='bad'; }
+  else {
+    // mix special kimbap/tteokbokki more often
+    const foodRoll=Math.random();
+    if(foodRoll<0.2){ emoji=KIMBAP; type='kimbap'; }
+    else if(foodRoll<0.4){ emoji=TTEOKBOKKI; type='tteok'; }
+    else { emoji=GOOD[Math.floor(Math.random()*GOOD.length)]; type='good'; }
+  }
+
+  const isPowerupActive = activePowerup&&activePowerup.type==='powerup';
+  const baseSpeed = H/280;
+  const slowFactor = isPowerupActive ? 0.55 : 1;
+  // Tốc độ tăng mạnh hơn mỗi cấp: +25% mỗi cấp (trước là +13%)
+  const speed=(baseSpeed)*(0.9+Math.random()*0.3+lv*0.25)*slowFactor;
+  const r=Math.round(W*0.052);
+  const lane=Math.floor(Math.random()*NUM_LANES);
+  const lx=getLaneX(lane);
+  const el=getDomEl();
+
+  // if cursed, show ghost instead but remember real type
+  const isCursed=activePowerup&&activePowerup.type==='ghost';
+  el.textContent=isCursed&&(type==='good'||type==='kimbap'||type==='tteok')?GHOST_ITEM:emoji;
+  el.style.fontSize=Math.round(r*1.6)+'px';
+  el.style.left=lx+'px'; el.style.top=(-r*2)+'px'; el.style.display='block';
+  if(isCursed) el.classList.add('ghost-filter');
+  emojiLayer.appendChild(el);
+  items.push({x:lx,y:-r*2,emoji,type,disguised:isCursed&&(type==='good'||type==='kimbap'||type==='tteok'),speed,r,el});
+}
+
+function startCountdown(){
+  let cd=3;
+  function tick(){
+    drawBg();
+    ctx.fillStyle='rgba(255,238,215,0.88)'; ctx.fillRect(0,0,W,H);
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font=`700 ${Math.round(W*0.15)}px -apple-system,sans-serif`;
+    ctx.fillStyle='#D85A30'; ctx.fillText(cd===0?'BẮT ĐẦU!':String(cd),W/2,H/2);
+    ctx.font=`${Math.round(W*0.04)}px -apple-system,sans-serif`;
+    ctx.fillStyle='#999'; ctx.fillText('Hãy sẵn sàng!',W/2,H/2+W*0.16);
+    playCountBeep(cd===0);
+    if(cd===0){setTimeout(()=>{startBgMusic();startGame();},300);return;}
+    cd--; setTimeout(tick,1000);
+  }
+  tick();
+}
+
+function startGame(){
+  score=0; lives=3; particles=[]; floats=[]; petals=[]; spawnTimer=0; running=true;
+  activePowerup=null; hidePowerupBar();
+  sessionStats={kimbap:0,tteok:0,powerups:0,ghosts:0};
+  clearAllDomItems();
+  document.getElementById('score').textContent=0;
+  document.getElementById('lvbar').style.width='0%';
+  updateLives();
+  document.getElementById('msg').textContent='';
+  basketX=W/2;
+  if(raf){cancelAnimationFrame(raf);raf=null;}
+  raf=requestAnimationFrame(loop);
+}
+
+function loop(){
+  if(!running) return;
+
+  // Update powerup timer
+  if(activePowerup){
+    const now=performance.now();
+    const pct=Math.max(0,(activePowerup.endTime-now)/activePowerup.duration);
+    updatePowerupBar(pct);
+    if(now>=activePowerup.endTime) clearPowerup();
+  }
+
+  spawnTimer++;
+  // Spawn nhanh hơn theo cấp: mỗi cấp giảm 10 frame (trước là 6), tối thiểu 22 frame
+  const rate=Math.max(22,100-Math.floor(score/100)*10);
+  if(spawnTimer>=rate){spawnItem();spawnTimer=0;}
+
+  drawBg();
+  const curBW=drawBasket(); // draw basket, get effective width
+  const by=H-BH-H*0.03;
+  const bx=basketX-curBW/2;
+
+  for(let i=items.length-1;i>=0;i--){
+    const item=items[i];
+    item.y+=item.speed;
+    if(item.el) item.el.style.top=item.y+'px';
+
+    const hitY=item.y+item.r*0.6>=by&&item.y-item.r*0.6<=by+BH;
+    const hitX=item.x>=bx-item.r*0.3&&item.x<=bx+curBW+item.r*0.3;
+
+    if(hitY&&hitX){
+      const cx=item.x, cy=item.y;
+      if(item.el){releaseDomEl(item.el);item.el=null;}
+      items.splice(i,1);
+
+      if(item.type==='bad'){
+        lives--; updateLives(); playBomb();
+        addParticles(cx,cy,'#A32D2D');
+        addFloat(cx,cy-24,'💣 −1❤️','#A32D2D');
+        document.getElementById('msg').textContent='💣 Dính bom rồi!';
+        if(lives<=0){endGame();return;}
+
+      } else if(item.type==='powerup'){
+        applyPowerup('powerup');
+        addParticles(cx,cy,'#D4A017',16);
+        // burst confetti at canvas position
+        const cr=canvas.getBoundingClientRect();
+        burstConfetti(cr.left+cx*(cr.width/W), cr.top+cy*(cr.height/H), 40);
+
+      } else if(item.type==='ghost'){
+        applyPowerup('ghost');
+        addParticles(cx,cy,'#9B59B6',10);
+
+      } else if(item.disguised || (activePowerup&&activePowerup.type==='ghost' && (item.type==='good'||item.type==='kimbap'||item.type==='tteok'))){
+        // Đang bị nguyền ma: mọi đồ ăn đều độc → hứng vào bị trừ điểm
+        setScore(score-20); playMiss();
+        addParticles(cx,cy,'#7B5EA7',8);
+        addFloat(cx,cy-24,'👻 −20đ','#7B5EA7');
+        document.getElementById('msg').textContent='👻 Đồ ăn bị độc! −20 điểm!';
+
+      } else {
+        // normal good food
+        setScore(score+10); playCatch();
+        // track kimbap / tteokbokki
+        if(item.type==='kimbap') sessionStats.kimbap=(sessionStats.kimbap||0)+1;
+        if(item.type==='tteok')  sessionStats.tteok=(sessionStats.tteok||0)+1;
+        addParticles(cx,cy,'#3B6D11',10);
+        addFloat(cx,cy-24,'+10','#2D7D22');
+        // confetti burst
+        const cr=canvas.getBoundingClientRect();
+        burstConfetti(cr.left+cx*(cr.width/W), cr.top+cy*(cr.height/H), 18);
+        document.getElementById('msg').textContent='Ngon quá! +10 🎉';
+        checkBadges(score);
+      }
+      continue;
+    }
+
+    if(item.y>H+item.r){
+      if(item.el){releaseDomEl(item.el);item.el=null;}
+      items.splice(i,1);
+      const isGoodType = item.type==='good'||item.type==='kimbap'||item.type==='tteok';
+      const isCursedNow = activePowerup&&activePowerup.type==='ghost';
+      // Không phạt nếu đang bị nguyền MA, HOẶC item này được spawn ra khi đang bị nguyền (disguised)
+      if(isGoodType && !isCursedNow && !item.disguised){
+        lives--; updateLives(); playMiss();
+        setScore(score-20);
+        addFloat(item.x,H*0.85,'−20 😢','#BA7517');
+        document.getElementById('msg').textContent='Hụt rồi! −20 điểm 😢';
+        if(lives<=0){endGame();return;}
+      }
+    }
+  }
+
+  // Particles
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.18; p.life-=0.03;
+    if(p.life<=0){particles.splice(i,1);continue;}
+    ctx.save(); ctx.globalAlpha=p.life*p.life;
+    ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+  ctx.globalAlpha=1;
+
+  // Float texts
+  for(let i=floats.length-1;i>=0;i--){
+    const f=floats[i];
+    f.y+=f.vy; f.life-=0.02;
+    if(f.life<=0){floats.splice(i,1);continue;}
+    ctx.save(); ctx.globalAlpha=f.life;
+    ctx.font=`700 ${Math.round(W*0.038)}px -apple-system,sans-serif`;
+    ctx.fillStyle=f.color; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(f.txt,f.x,f.y); ctx.restore();
+  }
+  ctx.globalAlpha=1;
+
+  ctx.font=`600 ${Math.round(W*0.028)}px -apple-system,sans-serif`;
+  ctx.fillStyle='rgba(170,110,70,0.6)'; ctx.textAlign='left'; ctx.textBaseline='top';
+  ctx.fillText('Cấp '+(1+Math.floor(score/100)),W*0.03,H*0.025);
+
+  raf=requestAnimationFrame(loop);
+}
+
+function endGame(){
+  running=false; stopBgMusic(); playGameOver();
+  if(raf){cancelAnimationFrame(raf);raf=null;}
+  clearAllDomItems(); clearPowerup();
+  if(score>best){best=score;document.getElementById('best').textContent=best;}
+  leaderboard.push({name:playerName,score});
+  leaderboard.sort((a,b)=>b.score-a.score);
+  leaderboard=leaderboard.slice(0,10);
+  renderLeaderboard();
+  checkBadges(score);
+
+  // Big confetti if good score
+  if(score>=100){
+    const cr=canvas.getBoundingClientRect();
+    burstConfetti(cr.left+W/2*(cr.width/W),cr.top+H*0.3*(cr.height/H),60);
+  }
+
+  drawBg();
+  ctx.fillStyle='rgba(255,238,215,0.92)'; ctx.fillRect(0,0,W,H);
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.font=`700 ${Math.round(W*0.062)}px -apple-system,sans-serif`;
+  ctx.fillStyle='#D85A30'; ctx.fillText('Kết thúc! 🍱',W/2,H/2-H*0.15);
+  ctx.font=`${Math.round(W*0.038)}px -apple-system,sans-serif`;
+  ctx.fillStyle='#555'; ctx.fillText(`${playerName} — ${score} điểm`,W/2,H/2-H*0.06);
+
+  const rank=leaderboard.findIndex(e=>e.name===playerName&&e.score===score)+1;
+  const grade=score>=300?'👑 Huyền thoại!':score>=200?'🏆 Vô địch!':score>=100?'👍 Giỏi lắm!':'😅 Thử lại nhé!';
+  ctx.font=`${Math.round(W*0.034)}px -apple-system,sans-serif`;
+  ctx.fillStyle='#888'; ctx.fillText(grade+' — Hạng #'+rank,W/2,H/2+H*0.05);
+
+  // Mini stats
+  ctx.font=`${Math.round(W*0.027)}px -apple-system,sans-serif`;
+  ctx.fillStyle='#aaa';
+  ctx.fillText(`🍙×${sessionStats.kimbap||0}  🍢×${sessionStats.tteok||0}  ⭐×${sessionStats.powerups||0}  👻×${sessionStats.ghosts||0}`,W/2,H/2+H*0.13);
+
+  // Replay button
+  const bw=W*0.46,bh=H*0.08,bxb=W/2-bw/2,byb=H/2+H*0.2;
+  ctx.fillStyle='#D85A30';
+  if(ctx.roundRect) ctx.roundRect(bxb,byb,bw,bh,bh/2); else ctx.rect(bxb,byb,bw,bh);
+  ctx.fill();
+  ctx.font=`700 ${Math.round(W*0.036)}px -apple-system,sans-serif`;
+  ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('Chơi lại',W/2,byb+bh/2);
+
+  canvas.style.cursor='pointer';
+  canvas.onclick=e=>{
+    const r=canvas.getBoundingClientRect();
+    const mx=(e.clientX-r.left)*(W/r.width),my=(e.clientY-r.top)*(H/r.height);
+    if(mx>=bxb&&mx<=bxb+bw&&my>=byb&&my<=byb+bh){
+      canvas.onclick=null; canvas.style.cursor='none'; showLobby();
+    }
+  };
+}
+
+function showLobby(){
+  stopBgMusic();
+  document.getElementById('lobby').style.display='flex';
+  document.getElementById('game-wrap').style.display='none';
+  renderLeaderboard(); renderBadgesGrid();
+  startLobbyPetals();
+}
+function showGame(){
+  stopLobbyPetals();
+  document.getElementById('lobby').style.display='none';
+  document.getElementById('game-wrap').style.display='flex';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{resize();startCountdown();}));
+}
+
+// Fullscreen
+document.getElementById('btn-fs').addEventListener('click',function(){
+  const el=document.documentElement;
+  if(!document.fullscreenElement&&!document.webkitFullscreenElement){
+    const req=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen;
+    if(req) req.call(el).then(()=>{this.textContent='✕';setTimeout(resize,300);}).catch(()=>{});
+  } else {
+    const ex=document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen;
+    if(ex) ex.call(document);
+  }
+});
+document.addEventListener('fullscreenchange',()=>{document.getElementById('btn-fs').textContent=document.fullscreenElement?'✕':'⛶';setTimeout(resize,300);});
+document.addEventListener('webkitfullscreenchange',()=>{document.getElementById('btn-fs').textContent=document.webkitFullscreenElement?'✕':'⛶';setTimeout(resize,300);});
+
+document.getElementById('btn-mute').addEventListener('click',toggleMute);
+
+function getCanvasX(clientX){
+  const r=canvas.getBoundingClientRect();
+  return Math.max(BW/2,Math.min(W-BW/2,(clientX-r.left)*(W/r.width)));
+}
+canvas.addEventListener('mousemove',e=>{basketX=getCanvasX(e.clientX);});
+canvas.addEventListener('touchmove',e=>{e.preventDefault();basketX=getCanvasX(e.touches[0].clientX);},{passive:false});
+
+document.getElementById('btn-start-lobby').onclick=()=>{
+  getAudioCtx();
+  playerName=document.getElementById('name-input').value.trim()||'Ẩn danh';
+  document.getElementById('player-name-display').textContent=playerName;
+  showGame();
+};
+document.getElementById('name-input').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btn-start-lobby').click();});
+window.addEventListener('resize',()=>{
+  if(document.getElementById('game-wrap').style.display!=='none') setTimeout(resize,100);
+});
+
+// ============================================================
+//  LOBBY FALLING PETALS / LEAVES
+// ============================================================
+const lobbyPetalCv = document.getElementById('lobby-petals');
+const lobbyPetalCtx = lobbyPetalCv.getContext('2d');
+let lobbyPetals = [];
+let lobbyPetalRaf = null;
+let lobbyPetalRunning = false;
+
+const PETAL_TYPES = [
+  // sakura petal
+  { draw(ctx,s,rot){ ctx.save(); ctx.rotate(rot); ctx.beginPath(); ctx.ellipse(0,0,s,s*0.5,0,0,Math.PI*2); ctx.fill(); ctx.restore(); }, colors:['#FFB7C5','#FFC8D4','#FF8FAB','#FFD6E0','#FFAEC0'] },
+  // leaf
+  { draw(ctx,s,rot){ ctx.save(); ctx.rotate(rot); ctx.beginPath(); ctx.moveTo(0,-s); ctx.quadraticCurveTo(s*0.8,-s*0.3,0,s); ctx.quadraticCurveTo(-s*0.8,-s*0.3,0,-s); ctx.fill(); ctx.restore(); }, colors:['#7AC74F','#5DAA3C','#A8D870','#C8E89A','#4E9A2E','#D4A847','#E8B84B','#C4822A'] },
+  // small round petal
+  { draw(ctx,s,rot){ ctx.save(); ctx.rotate(rot); ctx.beginPath(); ctx.arc(0,0,s*0.7,0,Math.PI*2); ctx.fill(); ctx.restore(); }, colors:['#F9C8E0','#FDE2EE','#FFB3CC','#FFCCE0'] },
+];
+
+function resizeLobbyPetals(){
+  lobbyPetalCv.width = window.innerWidth;
+  lobbyPetalCv.height = window.innerHeight;
+}
+
+function spawnLobbyPetal(){
+  const type = PETAL_TYPES[Math.floor(Math.random()*PETAL_TYPES.length)];
+  const color = type.colors[Math.floor(Math.random()*type.colors.length)];
+  lobbyPetals.push({
+    x: Math.random() * lobbyPetalCv.width,
+    y: -20,
+    vx: (Math.random()-0.5)*0.8,
+    vy: 0.6 + Math.random()*1.1,
+    rot: Math.random()*Math.PI*2,
+    rv: (Math.random()-0.5)*0.04,
+    s: 6 + Math.random()*10,
+    swing: Math.random()*Math.PI*2,
+    swingSpeed: 0.018 + Math.random()*0.02,
+    swingAmp: 0.4 + Math.random()*1.2,
+    alpha: 0.55 + Math.random()*0.35,
+    type, color,
+    fade: 0, fadeStart: lobbyPetalCv.height * (0.7 + Math.random()*0.25)
+  });
+}
+
+let petalSpawnTimer = 0;
+function animLobbyPetals(){
+  if(!lobbyPetalRunning) return;
+  lobbyPetalCtx.clearRect(0,0,lobbyPetalCv.width,lobbyPetalCv.height);
+
+  petalSpawnTimer++;
+  if(petalSpawnTimer >= 9){ spawnLobbyPetal(); petalSpawnTimer=0; }
+  if(lobbyPetals.length > 90) lobbyPetals.splice(0,5);
+
+  lobbyPetals = lobbyPetals.filter(p => p.y < lobbyPetalCv.height + 30 && p.alpha > 0.02);
+  lobbyPetals.forEach(p=>{
+    p.swing += p.swingSpeed;
+    p.x += p.vx + Math.sin(p.swing) * p.swingAmp;
+    p.y += p.vy;
+    p.rot += p.rv;
+    if(p.y > p.fadeStart) p.alpha -= 0.008;
+
+    lobbyPetalCtx.save();
+    lobbyPetalCtx.globalAlpha = Math.max(0, p.alpha);
+    lobbyPetalCtx.fillStyle = p.color;
+    lobbyPetalCtx.translate(p.x, p.y);
+    p.type.draw(lobbyPetalCtx, p.s, p.rot);
+    lobbyPetalCtx.restore();
+  });
+
+  lobbyPetalRaf = requestAnimationFrame(animLobbyPetals);
+}
+
+function startLobbyPetals(){
+  if(lobbyPetalRunning) return;
+  lobbyPetalRunning = true;
+  lobbyPetals = []; petalSpawnTimer = 0;
+  animLobbyPetals();
+}
+function stopLobbyPetals(){
+  lobbyPetalRunning = false;
+  if(lobbyPetalRaf){ cancelAnimationFrame(lobbyPetalRaf); lobbyPetalRaf=null; }
+  lobbyPetalCtx.clearRect(0,0,lobbyPetalCv.width,lobbyPetalCv.height);
+}
+
+window.addEventListener('resize', resizeLobbyPetals);
+resizeLobbyPetals();
+
+// ============================================================
+//  RESET LEADERBOARD
+// ============================================================
+document.getElementById('btn-reset-lb').addEventListener('click', ()=>{
+  document.getElementById('reset-confirm').classList.add('show');
+});
+document.getElementById('btn-cancel-reset').addEventListener('click', ()=>{
+  document.getElementById('reset-confirm').classList.remove('show');
+});
+document.getElementById('btn-confirm-reset').addEventListener('click', ()=>{
+  leaderboard = [];
+  renderLeaderboard();
+  document.getElementById('reset-confirm').classList.remove('show');
+  // Celebratory petal burst effect
+  for(let i=0;i<18;i++){
+    setTimeout(()=>spawnLobbyPetal(), i*40);
+  }
+});
+
+// ============================================================
+//  Init
+// ============================================================
+renderLeaderboard();
+renderBadgesGrid();
+startLobbyPetals();
+</script>
+</body>
+</html>
